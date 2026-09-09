@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<meta name="theme-color" content="#101827" />
+<title>DINO DASH RACE</title>
+<style>
+:root{--bg:#0b1220;--panel:#131f34;--panel2:#182841;--text:#f8fbff;--muted:#9eb1c9;--accent:#80f0a4;--danger:#ff6f91;--gold:#ffd65a;--line:rgba(255,255,255,.11)}
+*{box-sizing:border-box} html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% 0,#183259 0,#0b1220 46%,#070c14 100%);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overscroll-behavior:none}button,input,select{font:inherit}
+button{border:0;border-radius:16px;padding:14px 18px;font-weight:900;cursor:pointer;transition:.16s transform,.16s opacity}.primary{background:linear-gradient(135deg,#88f7a9,#53d88d);color:#082216;box-shadow:0 8px 30px rgba(83,216,141,.25)}.secondary{background:#223654;color:#fff;border:1px solid var(--line)}.danger{background:#ff6f91;color:#241018}.primary:active,.secondary:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:not-allowed}
+#app{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:18px}.screen{width:min(1040px,100%)}.hidden{display:none!important}
+.logo{text-align:center;margin-bottom:22px}.logo .emoji{font-size:72px;filter:drop-shadow(0 10px 18px rgba(0,0,0,.3));animation:bob 1.8s ease-in-out infinite}.logo h1{margin:2px 0 0;font-size:clamp(36px,8vw,72px);line-height:.92;letter-spacing:-.04em;text-shadow:0 5px 0 #101a2a}.logo h1 span{color:#8cf0a5}.logo p{margin:12px 0 0;color:var(--muted);font-weight:800}@keyframes bob{50%{transform:translateY(-8px) rotate(-2deg)}}
+.card{background:linear-gradient(180deg,rgba(24,40,65,.96),rgba(15,25,42,.96));border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.35)}.home-actions{display:grid;grid-template-columns:1fr 1fr;gap:14px}.big-action{min-height:132px;text-align:left;display:flex;flex-direction:column;justify-content:center;padding:22px}.big-action b{font-size:24px}.big-action span{font-size:13px;opacity:.72;margin-top:6px}.big-action .icon{font-size:36px;margin-bottom:8px}
+.form-grid{display:grid;gap:12px}label{font-size:12px;color:var(--muted);font-weight:900;letter-spacing:.08em}input,select{width:100%;background:#0c1727;border:1px solid var(--line);color:#fff;border-radius:14px;padding:14px 15px;outline:none}input:focus,select:focus{border-color:#67e89a}.row{display:flex;gap:10px;align-items:center}.row>*{flex:1}.back{margin-bottom:12px;background:none;color:#b7c7da;padding:8px 2px}
+.room-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.room-code{font-size:42px;font-weight:1000;letter-spacing:.16em}.tiny{font-size:12px;color:var(--muted)}.players{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}.player-card{min-height:122px;border-radius:18px;background:#0e1a2c;border:1px solid var(--line);padding:12px;text-align:center;position:relative}.player-card.empty{opacity:.38;border-style:dashed}.dino-chip{height:58px;display:flex;align-items:center;justify-content:center}.dino-mini{font-size:42px}.player-name{font-weight:1000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.host-badge{position:absolute;top:7px;right:7px;background:#ffd65a;color:#3b2b00;padding:3px 6px;border-radius:8px;font-size:9px;font-weight:1000}.share{display:flex;gap:8px;margin:12px 0}.share input{font-size:12px}.statusline{text-align:center;color:#9fb5cc;font-weight:800;margin-top:12px}
+#gameScreen{width:min(1120px,100%)}.game-shell{position:relative;border-radius:24px;overflow:hidden;background:#83d9f6;border:2px solid rgba(255,255,255,.12);box-shadow:0 30px 80px rgba(0,0,0,.45)}#gameCanvas{display:block;width:100%;height:auto;touch-action:none}.game-top{position:absolute;left:0;right:0;top:0;padding:10px;display:flex;justify-content:space-between;gap:8px;pointer-events:none}.hud-card{background:rgba(7,15,25,.74);backdrop-filter:blur(7px);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:8px 11px;font-weight:1000;text-shadow:0 2px 3px #000}.hud-main{font-size:20px}.hud-sub{font-size:10px;color:#c7d3df;margin-top:2px}.rank-list{display:flex;gap:5px;align-items:center;max-width:70%;overflow:hidden}.rank-pill{background:rgba(7,15,25,.74);border:1px solid rgba(255,255,255,.13);border-radius:11px;padding:6px 8px;font-size:11px;font-weight:900;white-space:nowrap}.rank-pill.me{outline:2px solid rgba(255,255,255,.8)}
+.countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(70px,18vw,180px);font-weight:1000;color:#fff;text-shadow:0 10px 0 rgba(0,0,0,.25),0 0 40px rgba(255,255,255,.5);pointer-events:none}.tap-hint{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(7,15,25,.72);border-radius:999px;padding:8px 14px;font-size:11px;font-weight:900;pointer-events:none}.out-overlay{position:absolute;inset:0;background:rgba(6,11,18,.52);display:flex;align-items:center;justify-content:center;flex-direction:column;text-shadow:0 4px 0 rgba(0,0,0,.3);pointer-events:none}.out-overlay b{font-size:56px}.out-overlay span{font-size:20px;font-weight:900}.solo-exit{position:absolute;right:10px;bottom:10px;z-index:3;padding:8px 12px;border-radius:12px;background:rgba(7,15,25,.75);color:#fff;font-size:11px}
+.result-wrap{max-width:760px;margin:auto}.result-title{text-align:center}.result-title .round{color:#99abc2;font-weight:900;letter-spacing:.12em}.result-title h2{font-size:clamp(36px,8vw,64px);margin:2px 0 6px}.mystery{font-size:14px;color:#ffd65a;font-weight:900}.bars{display:grid;gap:12px;margin:22px 0}.bar-row{display:grid;grid-template-columns:120px 1fr 104px;gap:10px;align-items:center}.bar-name{font-weight:1000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar-track{height:28px;background:#0b1524;border-radius:999px;overflow:hidden;border:1px solid var(--line)}.bar-fill{width:0;height:100%;border-radius:999px;transition:width 1.35s cubic-bezier(.18,.8,.18,1);position:relative}.bar-fill:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);animation:shine 1.2s infinite}@keyframes shine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}.bar-value{text-align:right;font-size:18px;font-weight:1000}.diff{font-size:10px;color:#9eb1c9}.winner-stage{text-align:center;min-height:96px}.winner-stage .crown{font-size:46px}.winner-stage .winname{font-size:30px;font-weight:1000}.winner-stage .close{color:#ffd65a;font-weight:1000;margin-top:4px}.result-actions{display:flex;gap:10px;justify-content:center}.result-actions button{min-width:180px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#08111e;border:1px solid var(--line);padding:11px 15px;border-radius:12px;opacity:0;pointer-events:none;transition:.2s;z-index:99;font-weight:800}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:700px){#app{padding:10px}.home-actions{grid-template-columns:1fr}.big-action{min-height:100px}.players{grid-template-columns:1fr 1fr}.room-code{font-size:34px}.bar-row{grid-template-columns:88px 1fr 78px}.bar-value{font-size:14px}.card{padding:15px}.game-shell{border-radius:16px}.rank-list{max-width:62%}.rank-pill{font-size:9px;padding:5px}.hud-main{font-size:16px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <section id="homeScreen" class="screen">
+    <div class="logo"><div class="emoji">🦖</div><h1>DINO <span>DASH</span><br>RACE</h1><p>走れ。跳べ。最後に一番遠くへ。</p></div>
+    <div class="card home-actions">
+      <button id="soloBtn" class="big-action primary"><span class="icon">♾️</span><b>ひとりで遊ぶ</b><span>ENDLESS / 自己ベストに挑戦</span></button>
+      <button id="multiBtn" class="big-action secondary"><span class="icon">🦖🦕</span><b>みんなで遊ぶ</b><span>2〜4人 / 1〜5レース総距離対戦</span></button>
+    </div>
+  </section>
+
+  <section id="modeScreen" class="screen hidden">
+    <button class="back" data-back>← 戻る</button>
+    <div class="card">
+      <h2 style="margin-top:0">みんなで遊ぶ</h2>
+      <div class="home-actions">
+        <button id="createModeBtn" class="big-action primary"><span class="icon">👑</span><b>部屋を作る</b><span>ホストとしてゲームを開始</span></button>
+        <button id="joinModeBtn" class="big-action secondary"><span class="icon">🔢</span><b>部屋に参加</b><span>4桁のコードで参加</span></button>
+      </div>
+    </div>
+  </section>
+
+  <section id="createScreen" class="screen hidden">
+    <button class="back" data-back>← 戻る</button>
+    <div class="card form-grid">
+      <h2 style="margin:0">部屋を作る 👑</h2>
+      <div><label>なまえ</label><input id="createName" maxlength="14" placeholder="ゆうと"></div>
+      <div><label>レース数</label><select id="roundsSelect"><option value="1">1レース</option><option value="2">2レース</option><option value="3" selected>3レース</option><option value="4">4レース</option><option value="5">5レース</option></select></div>
+      <button id="createBtn" class="primary">この設定で部屋を作る</button>
+    </div>
+  </section>
+
+  <section id="joinScreen" class="screen hidden">
+    <button class="back" data-back>← 戻る</button>
+    <div class="card form-grid">
+      <h2 style="margin:0">部屋に参加 🦕</h2>
+      <div><label>4桁コード</label><input id="joinCode" inputmode="numeric" maxlength="4" placeholder="1234"></div>
+      <div><label>なまえ</label><input id="joinName" maxlength="14" placeholder="るか"></div>
+      <button id="joinBtn" class="primary">参加する</button>
+    </div>
+  </section>
+
+  <section id="lobbyScreen" class="screen hidden">
+    <div class="card">
+      <div class="room-head"><div><div class="tiny">ROOM CODE</div><div id="roomCode" class="room-code">0000</div></div><div style="text-align:right"><div class="tiny">RULE</div><div id="roomRule" style="font-weight:1000;font-size:18px">3レース・総距離</div></div></div>
+      <div id="players" class="players"></div>
+      <div class="share"><input id="shareUrl" readonly><button id="copyBtn" class="secondary" style="flex:0 0 auto">コピー</button></div>
+      <button id="startBtn" class="primary" style="width:100%">ゲーム開始</button>
+      <div id="lobbyStatus" class="statusline">みんなの参加を待っています...</div>
+    </div>
+  </section>
+
+  <section id="gameScreen" class="screen hidden">
+    <div class="game-shell">
+      <canvas id="gameCanvas" width="1000" height="560"></canvas>
+      <div class="game-top"><div class="hud-card"><div id="distanceHud" class="hud-main">0m</div><div id="roundHud" class="hud-sub">ENDLESS</div></div><div id="rankList" class="rank-list"></div></div>
+      <div id="countdown" class="countdown hidden">3</div>
+      <div id="tapHint" class="tap-hint">TAP / SPACE = JUMP</div>
+      <div id="outOverlay" class="out-overlay hidden"><b>OUT!</b><span id="outDistance">0m</span></div>
+      <button id="soloExit" class="solo-exit hidden">終了</button>
+    </div>
+  </section>
+
+  <section id="resultScreen" class="screen hidden">
+    <div class="card result-wrap">
+      <div class="result-title"><div id="resultRound" class="round">ROUND 1 RESULT</div><h2 id="resultHeading">RESULT</h2><div id="mysteryText" class="mystery hidden">最終レース前。総距離はまだ秘密… ???m</div></div>
+      <div id="winnerStage" class="winner-stage"></div>
+      <div id="bars" class="bars"></div>
+      <div class="result-actions"><button id="nextBtn" class="primary">次のレースへ</button><button id="homeBtn" class="secondary hidden">トップへ</button></div>
+    </div>
+  </section>
+</div>
+<div id="toast" class="toast"></div>
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const screens=['homeScreen','modeScreen','createScreen','joinScreen','lobbyScreen','gameScreen','resultScreen'];
+function show(id){screens.forEach(x=>$('#'+x).classList.toggle('hidden',x!==id));}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+let net={code:null,playerId:null,playerToken:null,hostToken:null,ws:null,state:null};
+let game={mode:null,running:false,alive:true,distance:0,worldX:0,y:0,vy:0,onGround:true,seed:1,last:0,lastSend:0,best:+localStorage.getItem('dinoBest')||0,remote:new Map(),resultKey:'',countdownSeen:false};
+const canvas=$('#gameCanvas'),ctx=canvas.getContext('2d');
+const W=canvas.width,H=canvas.height, GROUND=445, PLAYER_X=190, PX_PER_M=2.25;
+const dinos=[
+  {name:'T-REX',color:'#56d7ff',kind:'rex',emoji:'🦖'},
+  {name:'TRICERA',color:'#ff6f91',kind:'tri',emoji:'🦕'},
+  {name:'STEGO',color:'#ffd65a',kind:'stego',emoji:'🦖'},
+  {name:'RAPTOR',color:'#76e58c',kind:'raptor',emoji:'🦎'}
+];
+
+$('#soloBtn').onclick=()=>startSolo(); $('#multiBtn').onclick=()=>show('modeScreen');
+$('#createModeBtn').onclick=()=>show('createScreen'); $('#joinModeBtn').onclick=()=>show('joinScreen');
+$$('[data-back]').forEach(b=>b.onclick=()=>show(b.closest('section').id==='modeScreen'?'homeScreen':'modeScreen'));
+$('#homeBtn').onclick=()=>location.href='/';
+$('#soloExit').onclick=()=>{game.running=false;show('homeScreen')};
+
+const pathJoin=location.pathname.match(/^\/join\/(\d{4})/); if(pathJoin){$('#joinCode').value=pathJoin[1];show('joinScreen')}
+
+$('#createBtn').onclick=async()=>{
+  try{
+    const name=$('#createName').value.trim(); if(!name){toast('名前を入れてね');return}
+    const r=await fetch('/api/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name,rounds:+$('#roundsSelect').value})});
+    const d=await r.json(); if(!r.ok)throw new Error(d.detail||'作成できませんでした');
+    Object.assign(net,{code:d.code,playerId:d.player_id,playerToken:d.player_token,hostToken:d.host_token});
+    history.replaceState({},'',`/host/${d.code}`); connect();
+  }catch(e){toast(e.message)}
+};
+$('#joinBtn').onclick=async()=>{
+  try{
+    const code=$('#joinCode').value.replace(/\D/g,'').slice(0,4),name=$('#joinName').value.trim();
+    if(code.length!==4||!name){toast('コードと名前を入れてね');return}
+    const r=await fetch(`/api/rooms/${code}/join`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name})});
+    const d=await r.json(); if(!r.ok)throw new Error(d.detail||'参加できませんでした');
+    Object.assign(net,{code,playerId:d.player_id,playerToken:d.player_token,hostToken:null});
+    history.replaceState({},'',`/join/${code}`); connect();
+  }catch(e){toast(e.message)}
+};
+$('#copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText($('#shareUrl').value);toast('参加URLをコピーした！')}catch{toast('コピーできなかった')}};
+$('#startBtn').onclick=()=>hostPost('start'); $('#nextBtn').onclick=()=>net.state?.stage==='final_result'?hostPost('rematch'):hostPost('next');
+async function hostPost(action){try{const r=await fetch(`/api/rooms/${net.code}/${action}`,{method:'POST',headers:{'x-host-token':net.hostToken||''}});const d=await r.json();if(!r.ok)throw new Error(d.detail||'進められません')}catch(e){toast(e.message)}}
+
+function connect(){
+  if(net.ws)try{net.ws.close()}catch{}
+  const proto=location.protocol==='https:'?'wss':'ws';
+  const q=new URLSearchParams({player:net.playerId,token:net.playerToken});if(net.hostToken)q.set('host',net.hostToken);
+  net.ws=new WebSocket(`${proto}://${location.host}/ws/${net.code}?${q}`);
+  net.ws.onmessage=e=>handleState(JSON.parse(e.data)); net.ws.onclose=()=>toast('通信が切れました');
+}
+function handleState(s){
+  net.state=s;
+  if(s.stage==='lobby'){renderLobby(s);show('lobbyScreen');return}
+  if(s.stage==='countdown'||s.stage==='playing'){
+    if(game.mode!=='multi'||game.seed!==s.seed||!game.running){startMultiRound(s)}
+    if(s.stage==='countdown'){$('#countdown').classList.remove('hidden');$('#countdown').textContent=Math.max(1,Math.ceil(s.countdown));game.running=false}else{$('#countdown').classList.add('hidden');game.running=game.alive}
+    updateRemote(s); renderRanks(s); show('gameScreen');return
+  }
+  if(s.stage==='round_result'||s.stage==='final_result'){
+    game.running=false; renderResult(s);show('resultScreen');
+  }
+}
+function renderLobby(s){
+  $('#roomCode').textContent=s.code;$('#roomRule').textContent=`${s.rounds_total}レース・総距離`;
+  $('#shareUrl').value=`${location.origin}/join/${s.code}`;
+  const host=s.host_player_id;let html='';
+  for(let i=0;i<4;i++){const p=s.players[i];if(p)html+=`<div class="player-card"><div class="dino-chip"><span class="dino-mini">${dinos[p.dino].emoji}</span></div><div class="player-name">${esc(p.name)}</div>${p.id===host?'<span class="host-badge">HOST</span>':''}</div>`;else html+='<div class="player-card empty"><div class="dino-chip"><span class="dino-mini">＋</span></div><div class="player-name">募集中</div></div>'}
+  $('#players').innerHTML=html;
+  const isHost=s.is_host;$('#startBtn').classList.toggle('hidden',!isHost);$('#startBtn').disabled=s.players.length<2;
+  $('#lobbyStatus').textContent=isHost?(s.players.length<2?'あと1人来たらスタートできる！':`${s.players.length}人参加中。準備できたらスタート！`):'ホストがゲームを開始するまで待ってね';
+}
+
+function startSolo(){
+  game.mode='solo';game.seed=(Date.now()&0x7fffffff);resetRun();game.running=true;$('#soloExit').classList.remove('hidden');$('#rankList').innerHTML='';$('#roundHud').textContent=`ENDLESS  BEST ${Math.floor(game.best)}m`;show('gameScreen');requestAnimationFrame(loop);
+}
+function startMultiRound(s){
+  game.mode='multi';game.seed=s.seed;resetRun();game.running=false;game.resultKey='';$('#soloExit').classList.add('hidden');$('#roundHud').textContent=`ROUND ${s.round_no} / ${s.rounds_total}`;show('gameScreen');requestAnimationFrame(loop);
+}
+function resetRun(){game.alive=true;game.distance=0;game.worldX=0;game.y=GROUND-47;game.vy=0;game.onGround=true;game.last=performance.now();game.lastSend=0;$('#outOverlay').classList.add('hidden');$('#tapHint').classList.remove('hidden')}
+function jump(){if(!game.alive)return;if(game.onGround){game.vy=-735;game.onGround=false;$('#tapHint').classList.add('hidden')}}
+canvas.addEventListener('pointerdown',e=>{e.preventDefault();jump()});window.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();jump()}});
+
+function randSeg(seg,n=0){let x=(game.seed ^ Math.imul(seg+17,0x45d9f3b) ^ Math.imul(n+31,0x27d4eb2d))>>>0;x^=x>>>16;x=Math.imul(x,0x7feb352d);x^=x>>>15;x=Math.imul(x,0x846ca68b);x^=x>>>16;return(x>>>0)/4294967296}
+function segmentObjects(seg){
+  if(seg<1)return[];const base=seg*620, r=randSeg(seg), out=[];
+  if(r<.20){out.push({type:'pit',x:base+235+randSeg(seg,2)*100,w:105+randSeg(seg,3)*65})}
+  else if(r<.72){out.push({type:'rock',x:base+260+randSeg(seg,4)*120,w:44+randSeg(seg,5)*28,h:42+randSeg(seg,6)*48})}
+  else{out.push({type:'rock',x:base+220,w:42,h:50});out.push({type:'rock',x:base+380+randSeg(seg,7)*60,w:48,h:62})}
+  return out;
+}
+function nearObjects(){const cam=game.worldX-PLAYER_X,first=Math.floor((cam-200)/620),last=Math.floor((cam+W+300)/620),out=[];for(let s=Math.max(0,first);s<=last;s++)out.push(...segmentObjects(s));return out}
+function overPit(wx){for(const o of nearObjects())if(o.type==='pit'&&wx>o.x&&wx<o.x+o.w)return true;return false}
+function collide(){
+  const px=game.worldX,py=game.y,pw=52,ph=44;
+  for(const o of nearObjects())if(o.type==='rock'){if(px+pw*.35>o.x&&px-pw*.35<o.x+o.w&&py+ph>GROUND-o.h&&py<GROUND)return true}
+  return false;
+}
+function die(){if(!game.alive)return;game.alive=false;game.running=false;$('#outOverlay').classList.remove('hidden');$('#outDistance').textContent=`${Math.floor(game.distance)}m`;if(game.mode==='solo'){if(game.distance>game.best){game.best=game.distance;localStorage.setItem('dinoBest',String(game.best));$('#outOverlay').querySelector('b').textContent='NEW BEST!'}else $('#outOverlay').querySelector('b').textContent='OUT!';$('#roundHud').textContent=`BEST ${Math.floor(game.best)}m`;setTimeout(()=>{$('#tapHint').textContent='TAPでリトライ';$('#tapHint').classList.remove('hidden')},500)}else sendRun(false)}
+canvas.addEventListener('pointerup',()=>{if(game.mode==='solo'&&!game.alive){$('#outOverlay').querySelector('b').textContent='OUT!';$('#tapHint').textContent='TAP / SPACE = JUMP';resetRun();game.running=true}});
+window.addEventListener('keydown',e=>{if((e.code==='Space'||e.code==='ArrowUp')&&game.mode==='solo'&&!game.alive){resetRun();game.running=true}})
+
+function loop(t){
+  if(!$('#gameScreen').classList.contains('hidden')){
+    const dt=Math.min(.035,Math.max(0,(t-game.last)/1000));game.last=t;
+    if(game.running&&game.alive){
+      const speed=310+Math.min(210,game.distance*.055);game.worldX+=speed*dt;game.distance=game.worldX/PX_PER_M;
+      game.vy+=1840*dt;game.y+=game.vy*dt;
+      const feet=game.y+47, hole=overPit(game.worldX);
+      if(!hole&&feet>=GROUND&&game.vy>=0){game.y=GROUND-47;game.vy=0;game.onGround=true}else if(hole&&game.onGround){game.onGround=false}
+      if(game.y>H+80||collide())die();
+      if(game.mode==='multi'&&t-game.lastSend>95){sendRun(true);game.lastSend=t}
+    }
+    draw();$('#distanceHud').textContent=`${Math.floor(game.distance)}m`;requestAnimationFrame(loop)
+  }
+}
+function sendRun(alive){if(net.ws?.readyState===1)net.ws.send(JSON.stringify({type:'run',distance:game.distance,y:game.y,alive}))}
+
+function draw(){
+  const cam=game.worldX-PLAYER_X;ctx.clearRect(0,0,W,H);
+  const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,'#71cdf1');grad.addColorStop(.65,'#d8f6ff');grad.addColorStop(1,'#f1d88b');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(47,88,105,.28)';for(let i=-1;i<5;i++){const x=(i*350-(cam*.08)%350);ctx.beginPath();ctx.moveTo(x,GROUND);ctx.lineTo(x+170,170);ctx.lineTo(x+340,GROUND);ctx.fill()}
+  ctx.fillStyle='rgba(40,118,85,.34)';for(let i=-1;i<7;i++){const x=i*210-(cam*.18)%210;ctx.beginPath();ctx.arc(x+80,390,85,Math.PI,0);ctx.fill()}
+  ctx.fillStyle='#5a3d28';ctx.fillRect(0,GROUND,W,H-GROUND);ctx.fillStyle='#57a85d';ctx.fillRect(0,GROUND-12,W,18);
+  for(const o of nearObjects()){const sx=o.x-cam;if(o.type==='pit'){ctx.fillStyle='#0b1220';ctx.fillRect(sx,GROUND-15,o.w,H-GROUND+20);ctx.fillStyle='#281d17';ctx.beginPath();ctx.ellipse(sx+o.w/2,GROUND+5,o.w/2+8,20,0,0,Math.PI*2);ctx.fill()}else{drawRock(sx,GROUND-o.h,o.w,o.h)}}
+  if(game.mode==='multi'&&net.state){for(const p of net.state.players){if(p.id===net.playerId||!p.alive)continue;const sx=PLAYER_X+(p.distance-game.distance)*PX_PER_M;if(sx>-80&&sx<W+80)drawDino(sx,p.y||GROUND-47,p.dino,false,p.name);else drawOffscreen(p,sx<0)}}
+  if(game.alive)drawDino(PLAYER_X,game.y,localDinoIndex(),true,localName());
+}
+function drawRock(x,y,w,h){ctx.save();ctx.translate(x,y);ctx.fillStyle='#6c6c68';ctx.beginPath();ctx.moveTo(2,h);ctx.lineTo(w*.12,h*.28);ctx.lineTo(w*.48,0);ctx.lineTo(w*.88,h*.25);ctx.lineTo(w,h);ctx.closePath();ctx.fill();ctx.fillStyle='rgba(255,255,255,.18)';ctx.beginPath();ctx.moveTo(w*.22,h*.42);ctx.lineTo(w*.48,h*.12);ctx.lineTo(w*.54,h*.46);ctx.closePath();ctx.fill();ctx.restore()}
+function localDinoIndex(){if(game.mode==='solo')return 0;return net.state?.players.find(p=>p.id===net.playerId)?.dino||0}function localName(){return net.state?.players.find(p=>p.id===net.playerId)?.name||'YOU'}
+function drawDino(x,y,index,me,name){const d=dinos[index%4],bounce=game.running?Math.sin(performance.now()/75)*2:0;ctx.save();ctx.translate(x,y+bounce);ctx.globalAlpha=me?1:.82;ctx.fillStyle=d.color;ctx.strokeStyle='#132236';ctx.lineWidth=4;ctx.lineJoin='round';
+  if(d.kind==='rex'||d.kind==='raptor'){ctx.beginPath();ctx.ellipse(0,25,30,20,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(-25,25);ctx.lineTo(-62,13);ctx.lineTo(-30,36);ctx.closePath();ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(26,5,24,19,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(34,0,5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#111';ctx.beginPath();ctx.arc(36,0,2,0,Math.PI*2);ctx.fill();}
+  else if(d.kind==='tri'){ctx.beginPath();ctx.ellipse(0,26,34,21,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(30,16,24,18,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(14,7);ctx.lineTo(5,-15);ctx.lineTo(25,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(31,4);ctx.lineTo(31,-17);ctx.lineTo(40,5);ctx.closePath();ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(50,15);ctx.lineTo(67,10);ctx.lineTo(50,22);ctx.closePath();ctx.fill();ctx.stroke();}
+  else{ctx.beginPath();ctx.ellipse(0,27,35,20,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(-30,25);ctx.lineTo(-62,13);ctx.lineTo(-34,35);ctx.closePath();ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(28,18,19,15,0,0,Math.PI*2);ctx.fill();ctx.stroke();for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(i*12-6,10);ctx.lineTo(i*12,-10-Math.abs(i)*2);ctx.lineTo(i*12+8,12);ctx.closePath();ctx.fill();ctx.stroke()}}
+  ctx.strokeStyle='#132236';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(-12,37);ctx.lineTo(-18,52);ctx.moveTo(12,38);ctx.lineTo(18,52);ctx.stroke();ctx.strokeStyle=d.color;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-12,37);ctx.lineTo(-18,52);ctx.moveTo(12,38);ctx.lineTo(18,52);ctx.stroke();
+  ctx.globalAlpha=1;ctx.font='900 13px system-ui';ctx.textAlign='center';const label=me?`YOU ${name}`:name;const tw=ctx.measureText(label).width;ctx.fillStyle='rgba(7,17,29,.82)';ctx.fillRect(-tw/2-7,-35,tw+14,20);ctx.fillStyle='#fff';ctx.fillText(label,0,-21);ctx.restore()}
+function drawOffscreen(p,left){const x=left?18:W-18,y=120+(p.dino*38);ctx.save();ctx.fillStyle='rgba(7,15,25,.78)';ctx.beginPath();ctx.roundRect(left?4:W-122,y-15,118,30,10);ctx.fill();ctx.fillStyle='#fff';ctx.font='900 11px system-ui';ctx.textAlign=left?'left':'right';const diff=Math.round(p.distance-game.distance);ctx.fillText(`${left?'◀':'▶'} ${p.name} ${diff>0?'+':''}${diff}m`,left?12:W-12,y+4);ctx.restore()}
+
+function updateRemote(s){game.remote.clear();s.players.forEach(p=>game.remote.set(p.id,p))}
+function renderRanks(s){const list=[...s.standings].sort((a,b)=>b.distance-a.distance);$('#rankList').innerHTML=list.map(r=>`<div class="rank-pill ${r.id===net.playerId?'me':''}">${r.rank} ${esc(r.name)} ${Math.floor(r.distance)}m${!r.alive?' OUT':''}</div>`).join('')}
+
+function renderResult(s){
+  const key=`${s.stage}-${s.round_no}-${s.result_rows.map(x=>x.actual_total).join('-')}`;if(game.resultKey===key)return;game.resultKey=key;
+  const final=s.stage==='final_result',hidden=s.hide_totals;$('#resultRound').textContent=final?'FINAL RESULT':`ROUND ${s.round_no} RESULT`;$('#resultHeading').textContent=final?'TOTAL RESULT':'RACE RESULT';$('#mysteryText').classList.toggle('hidden',!hidden);
+  $('#nextBtn').classList.toggle('hidden',!s.is_host);$('#homeBtn').classList.toggle('hidden',!final);$('#nextBtn').textContent=final?'もう一度！':'次のレースへ';
+  const rows=[...s.result_rows].sort((a,b)=>b.actual_total-a.actual_total);const max=Math.max(...rows.map(r=>final?r.actual_total:r.round_distance),1);const leader=rows[0];const gap=rows[1]?leader.actual_total-rows[1].actual_total:0;
+  $('#winnerStage').innerHTML=final?`<div class="crown">🏆</div><div class="winname">${esc(leader.name)} WIN!!</div>${rows[1]?`<div class="close">${gap<=30?'🔥 PHOTO FINISH!! ':gap<=100?'🔥 超接戦!! ':gap>=500?'👑 圧倒的勝利! ':''}差 ${Math.round(gap)}m</div>`:''}`:'';
+  $('#bars').innerHTML=rows.map((r,i)=>{const value=final?r.actual_total:r.round_distance;const shown=hidden?'???m':`${Math.floor(value)}m`;const diff=i===0?'':`<div class="diff">−${Math.floor((final?leader.actual_total:rows[0].round_distance)-value)}m</div>`;return`<div class="bar-row"><div class="bar-name">${['🥇','🥈','🥉','4️⃣'][i]||''} ${esc(r.name)}</div><div class="bar-track"><div class="bar-fill" data-pct="${Math.max(4,value/max*100)}" style="background:${r.color}"></div></div><div class="bar-value">${shown}${hidden?'':diff}</div></div>`}).join('');
+  requestAnimationFrame(()=>setTimeout(()=>$$('.bar-fill').forEach(el=>el.style.width=el.dataset.pct+'%'),120));
+}
+</script>
+</body>
+</html>

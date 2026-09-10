@@ -14,137 +14,15 @@ from pydantic import BaseModel
 
 ROOT = Path(__file__).resolve().parent
 BASE_HTML = (ROOT / "index.html").read_text(encoding="utf-8")
+UPGRADE_CSS = (ROOT / "upgrade.css").read_text(encoding="utf-8")
+UPGRADE_JS = (ROOT / "upgrade.js").read_text(encoding="utf-8")
+HTML = BASE_HTML.replace("</style>", UPGRADE_CSS + "\n</style>", 1)
+HTML = HTML.replace("</body>", f"<script>\n{UPGRADE_JS}\n</script>\n</body>", 1)
 
-PATCH_CSS = r"""
-/* v0.2 gameplay control patch */
-#gameScreen,
-#gameScreen * {
-  -webkit-user-select: none !important;
-  user-select: none !important;
-  -webkit-touch-callout: none !important;
-}
-#gameCanvas {
-  pointer-events: none;
-}
-.game-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 14px 10px calc(10px + env(safe-area-inset-bottom));
-}
-#jumpBtn {
-  width: min(460px, 92vw);
-  min-height: 72px;
-  border-radius: 22px;
-  font-size: clamp(22px, 5vw, 34px);
-  letter-spacing: .05em;
-  background: linear-gradient(180deg, #92f7ae, #54da8d);
-  color: #082216;
-  box-shadow: 0 10px 28px rgba(83,216,141,.28), inset 0 -4px 0 rgba(0,0,0,.14);
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-#jumpBtn:active {
-  transform: translateY(2px) scale(.985);
-  box-shadow: 0 5px 16px rgba(83,216,141,.22), inset 0 -2px 0 rgba(0,0,0,.14);
-}
-@media (max-width:700px) {
-  .game-controls { padding-top: 12px; }
-  #jumpBtn { min-height: 76px; }
-}
-"""
-
-PATCH_SCRIPT = r"""
-<script>
-(() => {
-  // Prevent long-press selection/callouts only while interacting with the game area.
-  const gameScreen = document.getElementById('gameScreen');
-  if (!gameScreen) return;
-  gameScreen.addEventListener('contextmenu', e => e.preventDefault());
-  gameScreen.addEventListener('dragstart', e => e.preventDefault());
-  gameScreen.addEventListener('selectstart', e => e.preventDefault());
-
-  // Put a large jump button in the free space below the play field.
-  if (!document.getElementById('jumpBtn')) {
-    const controls = document.createElement('div');
-    controls.className = 'game-controls';
-    controls.innerHTML = '<button id="jumpBtn" type="button" aria-label="ジャンプ">JUMP！</button>';
-    gameScreen.appendChild(controls);
-
-    const jumpBtn = document.getElementById('jumpBtn');
-    const pressJump = e => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (game.mode === 'solo' && !game.alive) {
-        document.querySelector('#outOverlay b').textContent = 'OUT!';
-        document.getElementById('tapHint').textContent = 'SPACE / 下のJUMPボタン';
-        resetRun();
-        game.running = true;
-        return;
-      }
-      jump();
-    };
-    jumpBtn.addEventListener('pointerdown', pressJump, {passive:false});
-  }
-
-  // Canvas is display-only now; keyboard or the button below controls jumping.
-  const hint = document.getElementById('tapHint');
-  if (hint) hint.textContent = 'SPACE / 下のJUMPボタン';
-
-  // The original handler restarted the round whenever game.running was false.
-  // During countdown and after falling into a pit that flag is intentionally false,
-  // so it caused endless resets. Initialize only once per (round, seed).
-  handleState = function(s) {
-    net.state = s;
-    if (s.stage === 'lobby') {
-      game._multiRoundKey = '';
-      renderLobby(s);
-      show('lobbyScreen');
-      return;
-    }
-
-    if (s.stage === 'countdown' || s.stage === 'playing') {
-      const roundKey = `${s.round_no}:${s.seed}`;
-      if (game.mode !== 'multi' || game._multiRoundKey !== roundKey) {
-        game._multiRoundKey = roundKey;
-        startMultiRound(s);
-        const h = document.getElementById('tapHint');
-        if (h) h.textContent = 'SPACE / 下のJUMPボタン';
-      }
-
-      if (s.stage === 'countdown') {
-        const cd = document.getElementById('countdown');
-        cd.classList.remove('hidden');
-        // Server countdown starts at 3.2s; never display a confusing "4".
-        cd.textContent = Math.max(1, Math.min(3, Math.ceil(s.countdown)));
-        game.running = false;
-      } else {
-        document.getElementById('countdown').classList.add('hidden');
-        game.running = game.alive;
-      }
-
-      updateRemote(s);
-      renderRanks(s);
-      show('gameScreen');
-      return;
-    }
-
-    if (s.stage === 'round_result' || s.stage === 'final_result') {
-      game.running = false;
-      renderResult(s);
-      show('resultScreen');
-    }
-  };
-})();
-</script>
-"""
-
-HTML = BASE_HTML.replace("</style>", PATCH_CSS + "\n</style>", 1)
-HTML = HTML.replace("</body>", PATCH_SCRIPT + "\n</body>", 1)
 app = FastAPI(title="DINO DASH RACE")
 
 MAX_PLAYERS = 4
-DINO_COLORS = ["#56d7ff", "#ff6f91", "#ffd65a", "#76e58c"]
+DINO_COLORS = ["#35c9f0", "#ff6685", "#f0c744", "#70df78"]
 
 
 @dataclass
@@ -234,8 +112,8 @@ def standings(room: Room) -> list[dict]:
             "alive": p.alive,
         })
     rows.sort(key=lambda x: (x["total"], x["distance"]), reverse=True)
-    for i, r in enumerate(rows, 1):
-        r["rank"] = i
+    for i, row in enumerate(rows, 1):
+        row["rank"] = i
     return rows
 
 
@@ -250,16 +128,15 @@ def state(room: Room, viewer_id: Optional[str], is_host: bool) -> dict:
     result_rows = []
     current_result = room.round_results.get(room.round_no, {})
     if room.stage in ("round_result", "final_result"):
-        result_rows = []
-        for r in rows:
-            item = dict(r)
-            item["round_distance"] = round(current_result.get(r["id"], 0.0), 1)
-            item["actual_total"] = round(room.totals.get(r["id"], 0.0), 1)
+        for row in rows:
+            item = dict(row)
+            item["round_distance"] = round(current_result.get(row["id"], 0.0), 1)
+            item["actual_total"] = round(room.totals.get(row["id"], 0.0), 1)
             item["display_total"] = None if hide_totals else item["actual_total"]
             result_rows.append(item)
         result_rows.sort(key=lambda x: x["actual_total"], reverse=True)
-        for i, r in enumerate(result_rows, 1):
-            r["rank"] = i
+        for i, row in enumerate(result_rows, 1):
+            row["rank"] = i
 
     return {
         "type": "state",
@@ -285,11 +162,11 @@ async def broadcast(code: str):
     if not room:
         return
     bad = []
-    for c in list(clients.get(code, [])):
+    for client in list(clients.get(code, [])):
         try:
-            await c["ws"].send_json(state(room, c["player_id"], c["is_host"]))
+            await client["ws"].send_json(state(room, client["player_id"], client["is_host"]))
         except Exception:
-            bad.append(c)
+            bad.append(client)
     if bad:
         clients[code] = [c for c in clients.get(code, []) if c not in bad]
 
@@ -306,7 +183,7 @@ def start_round(room: Room):
     room.round_no += 1
     reset_round(room)
     room.stage = "countdown"
-    room.countdown_until = time.time() + 3.2
+    room.countdown_until = time.time() + 3.0
 
 
 def begin_game(room: Room):
@@ -326,8 +203,9 @@ def finish_round(room: Room):
     room.stage = "final_result" if room.round_no >= room.rounds_total else "round_result"
 
 
-def active_players(room: Room):
-    return [p for p in room.players.values() if p.connected]
+def round_is_over(room: Room) -> bool:
+    contestants = list(room.players.values())
+    return bool(contestants) and all((not p.alive) or (not p.connected) for p in contestants)
 
 
 async def ticker():
@@ -337,11 +215,9 @@ async def ticker():
             if room.stage == "countdown" and now >= room.countdown_until:
                 room.stage = "playing"
                 await broadcast(code)
-            if room.stage == "playing":
-                connected = active_players(room)
-                if connected and all(not p.alive for p in connected):
-                    finish_round(room)
-                    await broadcast(code)
+            if room.stage == "playing" and round_is_over(room):
+                finish_round(room)
+                await broadcast(code)
             if now - room.last_active > 60 * 60 * 4:
                 rooms.pop(code, None)
                 clients.pop(code, None)
@@ -368,8 +244,8 @@ async def create_room(data: CreateRoom, req: Request):
     pid = secrets.token_hex(8)
     token = secrets.token_urlsafe(22)
     host_token = secrets.token_urlsafe(24)
-    p = Player(pid, token, name, 0, DINO_COLORS[0])
-    room = Room(code, host_token, pid, rounds, {pid: p})
+    player = Player(pid, token, name, 0, DINO_COLORS[0])
+    room = Room(code, host_token, pid, rounds, {pid: player})
     room.totals[pid] = 0.0
     rooms[code] = room
     clients[code] = []
@@ -400,8 +276,8 @@ async def join_room(code: str, data: JoinRoom):
     token = secrets.token_urlsafe(22)
     used = {p.dino for p in room.players.values()}
     dino = next((i for i in range(MAX_PLAYERS) if i not in used), len(room.players) % MAX_PLAYERS)
-    p = Player(pid, token, name, dino, DINO_COLORS[dino])
-    room.players[pid] = p
+    player = Player(pid, token, name, dino, DINO_COLORS[dino])
+    room.players[pid] = player
     room.totals[pid] = 0.0
     room.last_active = time.time()
     await broadcast(code)
@@ -413,8 +289,7 @@ async def start_game(code: str, request: Request):
     room = rooms.get(code)
     if not room:
         raise HTTPException(404, "部屋が見つかりません")
-    host_token = request.headers.get("x-host-token", "")
-    if host_token != room.host_token:
+    if request.headers.get("x-host-token", "") != room.host_token:
         raise HTTPException(403, "ホストだけが開始できます")
     if room.stage != "lobby":
         raise HTTPException(409, "開始できません")
@@ -462,6 +337,7 @@ async def ws_room(ws: WebSocket, code: str, player: str, token: str, host: str =
     if not room or player not in room.players or room.players[player].token != token:
         await ws.close(code=4403)
         return
+
     is_host = bool(host and host == room.host_token and player == room.host_id)
     await ws.accept()
     room.players[player].connected = True
@@ -470,6 +346,7 @@ async def ws_room(ws: WebSocket, code: str, player: str, token: str, host: str =
     room.last_active = time.time()
     await ws.send_json(state(room, player, is_host))
     await broadcast(code)
+
     try:
         while True:
             msg = await ws.receive_json()
@@ -480,7 +357,12 @@ async def ws_room(ws: WebSocket, code: str, player: str, token: str, host: str =
             p = room.players.get(player)
             if not p:
                 continue
+
             if msg.get("type") == "run" and room.stage == "playing":
+                # Once OUT, the server freezes this player's record. Any later
+                # jump/run packets are ignored; the client is spectator-only.
+                if not p.alive:
+                    continue
                 try:
                     dist = float(msg.get("distance", 0.0))
                     y = float(msg.get("y", 0.0))

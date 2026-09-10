@@ -1,116 +1,63 @@
-/* DINO DASH visual + spectator upgrade */
-#gameScreen,
-#gameScreen * {
-  -webkit-user-select: none !important;
-  user-select: none !important;
-  -webkit-touch-callout: none !important;
-}
-#gameCanvas {
-  pointer-events: none;
-  image-rendering: pixelated;
-}
-.game-shell {
-  background:#79c9e6;
-  border:4px solid #172536;
-  box-shadow:0 10px 0 #07101a,0 28px 70px rgba(0,0,0,.45);
-}
-.game-controls {
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:14px 10px calc(12px + env(safe-area-inset-bottom));
-  min-height:96px;
-}
-#jumpBtn {
-  width:min(470px,92vw);
-  min-height:72px;
-  border-radius:18px;
-  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  font-size:clamp(24px,5vw,36px);
-  letter-spacing:.08em;
-  background:linear-gradient(180deg,#86f1a6,#49c97b);
-  color:#071b10;
-  border:3px solid #153b27;
-  box-shadow:0 7px 0 #236b44,0 15px 28px rgba(0,0,0,.25);
-  touch-action:manipulation;
-  -webkit-tap-highlight-color:transparent;
-}
-#jumpBtn:active { transform:translateY(5px); box-shadow:0 2px 0 #236b44,0 8px 16px rgba(0,0,0,.22); }
-#jumpBtn:disabled { opacity:.36; filter:grayscale(.4); transform:none; }
-.spectator-controls {
-  width:min(620px,95vw);
-  display:grid;
-  grid-template-columns:78px 1fr 78px;
-  gap:10px;
-  align-items:center;
-}
-.spectator-controls button {
-  min-height:64px;
-  border-radius:16px;
-  background:#223654;
-  color:#fff;
-  border:2px solid rgba(255,255,255,.15);
-  font-size:26px;
-  touch-action:manipulation;
-}
-.spectator-label {
-  min-height:64px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  border-radius:16px;
-  background:#101c2e;
-  border:2px solid rgba(255,255,255,.12);
-  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  font-weight:900;
-  text-align:center;
-  padding:8px 10px;
-}
-.spectator-label small { color:#9eb1c9; font-size:10px; margin-top:3px; }
-.spectator-banner {
-  position:absolute;
-  left:50%;
-  top:74px;
-  transform:translateX(-50%);
-  z-index:5;
-  padding:8px 14px;
-  border-radius:9px;
-  background:rgba(7,15,25,.88);
-  border:2px solid rgba(255,255,255,.2);
-  color:#fff;
-  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  font-size:12px;
-  font-weight:900;
-  text-align:center;
-  pointer-events:none;
-  white-space:nowrap;
-}
-.out-overlay { background:rgba(6,11,18,.34); }
-.out-overlay b,
-.out-overlay span,
-.countdown,
-.rank-pill,
-.hud-card,
-.tap-hint {
-  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-}
-.pixel-dino-card {
-  width:84px;
-  height:54px;
-  image-rendering:pixelated;
-}
-.dino-species {
-  margin-top:3px;
-  font-size:9px;
-  color:#8fa9c0;
-  font-weight:1000;
-  letter-spacing:.05em;
-}
+/* DINO DASH arcade upgrade */
+#gameScreen,#gameScreen *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
+#gameCanvas{pointer-events:none;image-rendering:pixelated}
+.game-shell{background:#79c9e6;border:4px solid #172536;box-shadow:0 10px 0 #07101a,0 28px 70px rgba(0,0,0,.45)}
+.game-controls{display:flex;justify-content:center;align-items:center;padding:14px 10px calc(12px + env(safe-area-inset-bottom));min-height:96px}
+#jumpBtn{width:min(470px,92vw);min-height:72px;border-radius:18px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:clamp(24px,5vw,36px);letter-spacing:.08em;background:linear-gradient(180deg,#86f1a6,#49c97b);color:#071b10;border:3px solid #153b27;box-shadow:0 7px 0 #236b44,0 15px 28px rgba(0,0,0,.25);touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#jumpBtn:active{transform:translateY(5px);box-shadow:0 2px 0 #236b44,0 8px 16px rgba(0,0,0,.22)}
+#jumpBtn:disabled{opacity:.36;filter:grayscale(.4);transform:none}
+.spectator-controls{width:min(620px,95vw);display:grid;grid-template-columns:78px 1fr 78px;gap:10px;align-items:center}
+.spectator-controls button{min-height:64px;border-radius:16px;background:#223654;color:#fff;border:2px solid rgba(255,255,255,.15);font-size:26px;touch-action:manipulation}
+.spectator-label{min-height:64px;display:flex;align-items:center;justify-content:center;flex-direction:column;border-radius:16px;background:#101c2e;border:2px solid rgba(255,255,255,.12);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:900;text-align:center;padding:8px 10px}
+.spectator-label small{color:#9eb1c9;font-size:10px;margin-top:3px}
+.spectator-banner{position:absolute;left:50%;top:74px;transform:translateX(-50%);z-index:5;padding:8px 14px;border-radius:9px;background:rgba(7,15,25,.88);border:2px solid rgba(255,255,255,.2);color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;font-weight:900;text-align:center;pointer-events:none;white-space:nowrap}
+.out-overlay{background:rgba(6,11,18,.34)}
+.out-overlay b,.out-overlay span,.countdown,.rank-pill,.hud-card,.tap-hint{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.pixel-dino-card{width:84px;height:54px;image-rendering:pixelated}
+.dino-species{margin-top:3px;font-size:9px;color:#8fa9c0;font-weight:1000;letter-spacing:.05em}
+
+/* dino pickers */
+.dino-picker-wrap{margin:12px 0 2px}
+.dino-picker-title{font-size:11px;color:#9eb1c9;font-weight:1000;letter-spacing:.08em;margin-bottom:8px}
+.dino-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.dino-pick{padding:8px 5px;border-radius:14px;background:#0d1929;border:2px solid rgba(255,255,255,.09);color:#fff;text-align:center;box-shadow:none;min-height:84px}
+.dino-pick.selected{border-color:#8cf0a5;background:#173029;box-shadow:0 0 0 2px rgba(140,240,165,.12)}
+.dino-pick canvas{display:block;width:70px;height:44px;margin:0 auto 4px;image-rendering:pixelated}
+.dino-pick span{display:block;font-size:8px;font-weight:1000;letter-spacing:.02em;white-space:nowrap}
+
+/* lobby QR */
+.lobby-share-grid{display:grid;grid-template-columns:1fr 150px;gap:14px;align-items:stretch;margin:14px 0}
+.lobby-share-main{display:flex;flex-direction:column;justify-content:center;gap:9px}
+.qr-box{background:#fff;border-radius:16px;padding:9px;display:flex;align-items:center;justify-content:center;min-height:145px;box-shadow:inset 0 0 0 4px #172536}
+.qr-box img{width:128px;height:128px;display:block}
+.qr-caption{text-align:center;font-size:9px;color:#9eb1c9;font-weight:900;margin-top:4px}
+
+/* stage and sound */
+.stage-badge{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:4;background:rgba(7,15,25,.76);border:2px solid rgba(255,255,255,.16);border-radius:10px;padding:6px 10px;font:1000 11px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;pointer-events:none;transition:.25s}
+.stage-badge.pop{animation:stagePop .75s ease}
+@keyframes stagePop{0%{transform:translateX(-50%) scale(.7);opacity:0}35%{transform:translateX(-50%) scale(1.16);opacity:1}100%{transform:translateX(-50%) scale(1)}}
+.sound-toggle{position:fixed;right:14px;top:14px;z-index:120;width:46px;height:46px;border-radius:14px;padding:0;background:rgba(8,17,30,.9);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:20px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+
+/* ghost */
+.ghost-label{position:absolute;left:12px;bottom:10px;z-index:4;background:rgba(7,15,25,.68);border-radius:8px;padding:5px 8px;font:900 9px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#d8f6ff;pointer-events:none}
+
+/* stronger result reveal */
+.result-wrap{position:relative;overflow:hidden}
+.result-wrap.final-flash:before{content:"";position:absolute;inset:-50%;background:radial-gradient(circle,rgba(255,224,90,.28),transparent 42%);animation:resultPulse 1.5s ease-out;pointer-events:none}
+@keyframes resultPulse{0%{transform:scale(.4);opacity:0}25%{opacity:1}100%{transform:scale(1.5);opacity:0}}
+.bar-row{transition:transform .35s ease,filter .35s ease}
+.bar-row:first-child{transform:scale(1.025)}
+.bar-fill{box-shadow:inset 0 -4px 0 rgba(0,0,0,.17)}
+.result-big-gap{font:1000 clamp(18px,4vw,30px) ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#ffd65a;margin-top:7px;animation:gapSlam .6s cubic-bezier(.16,.9,.25,1.35)}
+@keyframes gapSlam{from{transform:scale(2.3);opacity:0}to{transform:scale(1);opacity:1}}
+.confetti-piece{position:fixed;top:-24px;width:10px;height:16px;z-index:200;pointer-events:none;animation:confettiFall 2.3s linear forwards}
+@keyframes confettiFall{to{transform:translate(var(--drift),110vh) rotate(780deg)}}
+.photo-finish{animation:photoFlash .45s steps(2) 4}
+@keyframes photoFlash{50%{filter:brightness(1.8)}}
+
 @media(max-width:700px){
-  .game-controls{min-height:100px;padding-top:12px}
-  #jumpBtn{min-height:76px}
-  .spectator-controls{grid-template-columns:64px 1fr 64px}
-  .spectator-controls button,.spectator-label{min-height:68px}
-  .spectator-banner{top:68px;font-size:10px;max-width:88vw;overflow:hidden;text-overflow:ellipsis}
+  .game-controls{min-height:100px;padding-top:12px}#jumpBtn{min-height:76px}.spectator-controls{grid-template-columns:64px 1fr 64px}.spectator-controls button,.spectator-label{min-height:68px}.spectator-banner{top:68px;font-size:10px;max-width:88vw;overflow:hidden;text-overflow:ellipsis}
+  .dino-picker{grid-template-columns:repeat(2,1fr)}.dino-pick{min-height:76px}.dino-pick canvas{width:62px;height:39px}
+  .lobby-share-grid{grid-template-columns:1fr 126px}.qr-box{min-height:126px;padding:7px}.qr-box img{width:108px;height:108px}
+  .sound-toggle{right:8px;top:8px;width:42px;height:42px}
 }

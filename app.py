@@ -6,23 +6,20 @@ import secrets
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 ROOT = Path(__file__).resolve().parent
-BASE_HTML = (ROOT / "index.html").read_text(encoding="utf-8")
-UPGRADE_CSS = (ROOT / "upgrade.css").read_text(encoding="utf-8")
-UPGRADE_JS = (ROOT / "upgrade.js").read_text(encoding="utf-8")
-HTML = BASE_HTML.replace("</style>", UPGRADE_CSS + "\n</style>", 1)
-HTML = HTML.replace("</body>", f"<script>\n{UPGRADE_JS}\n</script>\n</body>", 1)
+HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 
-app = FastAPI(title="DINO DASH RACE")
+app = FastAPI(title="POKO SMASH")
 
 MAX_PLAYERS = 4
-DINO_COLORS = ["#35c9f0", "#ff6685", "#f0c744", "#70df78"]
+GAME_SECONDS = 30.0
+COUNTDOWN_SECONDS = 3.0
 
 
 @dataclass
@@ -30,12 +27,24 @@ class Player:
     id: str
     token: str
     name: str
-    dino: int
-    color: str
     connected: bool = True
-    distance: float = 0.0
-    y: float = 0.0
-    alive: bool = True
+    joined_at: float = field(default_factory=time.time)
+
+
+@dataclass
+class Score:
+    score: int = 0
+    hits: int = 0
+    misses: int = 0
+    best_combo: int = 0
+
+
+@dataclass
+class Match:
+    id: str
+    label: str
+    players: List[str]
+    seed: int
 
 
 @dataclass
@@ -43,14 +52,16 @@ class Room:
     code: str
     host_token: str
     host_id: str
-    rounds_total: int
     players: Dict[str, Player] = field(default_factory=dict)
     stage: str = "lobby"
-    round_no: int = 0
-    seed: int = 0
+    tournament: bool = False
+    round_kind: str = ""
+    matches: List[Match] = field(default_factory=list)
+    scores: Dict[str, Score] = field(default_factory=dict)
+    semi_winners: List[str] = field(default_factory=list)
+    champion_id: Optional[str] = None
     countdown_until: float = 0.0
-    round_results: Dict[int, Dict[str, float]] = field(default_factory=dict)
-    totals: Dict[str, float] = field(default_factory=dict)
+    play_until: float = 0.0
     last_active: float = field(default_factory=time.time)
 
 
@@ -60,32 +71,21 @@ clients: Dict[str, list[dict]] = {}
 
 class CreateRoom(BaseModel):
     name: str
-    rounds: int = 3
-    dino: int = 0
 
 
 class JoinRoom(BaseModel):
     name: str
-    dino: int = 0
 
 
-def clean_name(name: str) -> str:
-    name = " ".join((name or "").strip().split())
+def clean_name(value: str) -> str:
+    name = " ".join((value or "").strip().split())
     if not name:
         raise HTTPException(400, "名前を入力してね")
     return name[:14]
 
 
-def clean_dino(value: int) -> int:
-    try:
-        value = int(value)
-    except Exception:
-        return 0
-    return value if 0 <= value < MAX_PLAYERS else 0
-
-
 def new_code() -> str:
-    for _ in range(1000):
+    for _ in range(1200):
         code = f"{random.randint(0, 9999):04d}"
         if code not in rooms:
             return code
@@ -93,77 +93,126 @@ def new_code() -> str:
 
 
 def public_player(room: Room, p: Player) -> dict:
+    s = room.scores.get(p.id, Score())
     return {
         "id": p.id,
         "name": p.name,
-        "dino": p.dino,
-        "color": p.color,
-        "distance": round(p.distance, 1),
-        "y": round(p.y, 1),
-        "alive": p.alive,
         "connected": p.connected,
-        "total": round(room.totals.get(p.id, 0.0), 1),
+        "is_host": p.id == room.host_id,
+        "score": s.score,
+        "hits": s.hits,
+        "misses": s.misses,
+        "best_combo": s.best_combo,
     }
 
 
-def standings(room: Room) -> list[dict]:
-    rows = []
-    for p in room.players.values():
-        total = room.totals.get(p.id, 0.0)
-        if room.stage in ("playing", "countdown"):
-            total += p.distance
-        rows.append({
-            "id": p.id,
-            "name": p.name,
-            "dino": p.dino,
-            "color": p.color,
-            "distance": round(p.distance, 1),
-            "total": round(total, 1),
-            "alive": p.alive,
-        })
-    rows.sort(key=lambda x: (x["total"], x["distance"]), reverse=True)
-    for i, row in enumerate(rows, 1):
-        row["rank"] = i
-    return rows
+def score_key(room: Room, pid: str):
+    s = room.scores.get(pid, Score())
+    # Score first, then fewer misses, then combo, then hits.
+    return (s.score, -s.misses, s.best_combo, s.hits)
+
+
+def winner_of(room: Room, ids: List[str]) -> str:
+    return max(ids, key=lambda pid: score_key(room, pid))
+
+
+def reset_scores(room: Room, ids: List[str]):
+    room.scores = {pid: Score() for pid in ids}
+
+
+def make_match(label: str, ids: List[str]) -> Match:
+    return Match(
+        id=secrets.token_hex(5),
+        label=label,
+        players=list(ids),
+        seed=secrets.randbits(31),
+    )
+
+
+def prepare_countdown(room: Room):
+    room.stage = "countdown"
+    room.countdown_until = time.time() + COUNTDOWN_SECONDS
+    room.play_until = room.countdown_until + GAME_SECONDS
+
+
+def begin_game(room: Room):
+    ids = list(room.players.keys())
+    if len(ids) < 2:
+        raise HTTPException(409, "2人以上で開始してね")
+    room.tournament = len(ids) == 4
+    room.semi_winners = []
+    room.champion_id = None
+
+    if len(ids) == 4:
+        room.round_kind = "semifinal"
+        room.matches = [
+            make_match("準決勝 A", [ids[0], ids[1]]),
+            make_match("準決勝 B", [ids[2], ids[3]]),
+        ]
+        reset_scores(room, ids)
+    else:
+        room.round_kind = "final"
+        room.matches = [make_match("FINAL", ids)]
+        reset_scores(room, ids)
+    prepare_countdown(room)
+
+
+def begin_final(room: Room):
+    if not room.tournament or len(room.semi_winners) != 2:
+        raise HTTPException(409, "決勝には進めません")
+    room.round_kind = "final"
+    room.matches = [make_match("GRAND FINAL", list(room.semi_winners))]
+    reset_scores(room, list(room.semi_winners))
+    prepare_countdown(room)
+
+
+def finish_round(room: Room):
+    if room.stage not in ("playing", "countdown"):
+        return
+    if room.round_kind == "semifinal":
+        room.semi_winners = [winner_of(room, m.players) for m in room.matches]
+        room.stage = "round_result"
+    else:
+        finalists = room.matches[0].players if room.matches else list(room.players.keys())
+        room.champion_id = winner_of(room, finalists)
+        room.stage = "final_result"
+
+
+def match_payload(room: Room, match: Match) -> dict:
+    return {
+        "id": match.id,
+        "label": match.label,
+        "seed": match.seed,
+        "players": [public_player(room, room.players[pid]) for pid in match.players if pid in room.players],
+    }
 
 
 def state(room: Room, viewer_id: Optional[str], is_host: bool) -> dict:
     now = time.time()
-    rows = standings(room)
-    hide_totals = (
-        room.stage == "round_result"
-        and room.rounds_total > 1
-        and room.round_no == room.rounds_total - 1
-    )
-    result_rows = []
-    current_result = room.round_results.get(room.round_no, {})
-    if room.stage in ("round_result", "final_result"):
-        for row in rows:
-            item = dict(row)
-            item["round_distance"] = round(current_result.get(row["id"], 0.0), 1)
-            item["actual_total"] = round(room.totals.get(row["id"], 0.0), 1)
-            item["display_total"] = None if hide_totals else item["actual_total"]
-            result_rows.append(item)
-        result_rows.sort(key=lambda x: x["actual_total"], reverse=True)
-        for i, row in enumerate(result_rows, 1):
-            row["rank"] = i
+    my_match = None
+    for m in room.matches:
+        if viewer_id in m.players:
+            my_match = match_payload(room, m)
+            break
 
     return {
         "type": "state",
         "code": room.code,
         "stage": room.stage,
-        "round_no": room.round_no,
-        "rounds_total": room.rounds_total,
-        "seed": room.seed,
-        "countdown": max(0.0, room.countdown_until - now) if room.stage == "countdown" else 0.0,
+        "round_kind": room.round_kind,
+        "tournament": room.tournament,
         "player_id": viewer_id,
         "host_player_id": room.host_id,
         "is_host": is_host,
-        "players": [public_player(room, p) for p in room.players.values()],
-        "standings": rows,
-        "result_rows": result_rows,
-        "hide_totals": hide_totals,
         "max_players": MAX_PLAYERS,
+        "game_seconds": GAME_SECONDS,
+        "countdown": max(0.0, room.countdown_until - now) if room.stage == "countdown" else 0.0,
+        "remaining": max(0.0, room.play_until - now) if room.stage in ("countdown", "playing") else 0.0,
+        "players": [public_player(room, p) for p in room.players.values()],
+        "matches": [match_payload(room, m) for m in room.matches],
+        "my_match": my_match,
+        "semi_winners": list(room.semi_winners),
+        "champion_id": room.champion_id,
     }
 
 
@@ -181,43 +230,6 @@ async def broadcast(code: str):
         clients[code] = [c for c in clients.get(code, []) if c not in bad]
 
 
-def reset_round(room: Room):
-    room.seed = secrets.randbits(31)
-    for p in room.players.values():
-        p.distance = 0.0
-        p.y = 0.0
-        p.alive = True
-
-
-def start_round(room: Room):
-    room.round_no += 1
-    reset_round(room)
-    room.stage = "countdown"
-    room.countdown_until = time.time() + 3.0
-
-
-def begin_game(room: Room):
-    room.round_results.clear()
-    room.totals = {pid: 0.0 for pid in room.players}
-    room.round_no = 0
-    start_round(room)
-
-
-def finish_round(room: Room):
-    if room.stage != "playing":
-        return
-    results = {pid: max(0.0, p.distance) for pid, p in room.players.items()}
-    room.round_results[room.round_no] = results
-    for pid, dist in results.items():
-        room.totals[pid] = room.totals.get(pid, 0.0) + dist
-    room.stage = "final_result" if room.round_no >= room.rounds_total else "round_result"
-
-
-def round_is_over(room: Room) -> bool:
-    contestants = list(room.players.values())
-    return bool(contestants) and all((not p.alive) or (not p.connected) for p in contestants)
-
-
 async def ticker():
     while True:
         now = time.time()
@@ -225,13 +237,14 @@ async def ticker():
             if room.stage == "countdown" and now >= room.countdown_until:
                 room.stage = "playing"
                 await broadcast(code)
-            if room.stage == "playing" and round_is_over(room):
+            elif room.stage == "playing" and now >= room.play_until:
                 finish_round(room)
                 await broadcast(code)
+
             if now - room.last_active > 60 * 60 * 4:
                 rooms.pop(code, None)
                 clients.pop(code, None)
-        await asyncio.sleep(0.15)
+        await asyncio.sleep(0.12)
 
 
 @app.on_event("startup")
@@ -246,20 +259,23 @@ async def page(code: Optional[str] = None):
     return HTMLResponse(HTML)
 
 
+@app.get("/health")
+async def health():
+    return {"ok": True, "rooms": len(rooms)}
+
+
 @app.post("/api/rooms")
 async def create_room(data: CreateRoom, req: Request):
     name = clean_name(data.name)
-    rounds = data.rounds if data.rounds in (1, 2, 3, 4, 5) else 3
-    dino = clean_dino(data.dino)
     code = new_code()
     pid = secrets.token_hex(8)
     token = secrets.token_urlsafe(22)
     host_token = secrets.token_urlsafe(24)
-    player = Player(pid, token, name, dino, DINO_COLORS[dino])
-    room = Room(code, host_token, pid, rounds, {pid: player})
-    room.totals[pid] = 0.0
+    player = Player(pid, token, name)
+    room = Room(code=code, host_token=host_token, host_id=pid, players={pid: player})
     rooms[code] = room
     clients[code] = []
+
     proto = req.headers.get("x-forwarded-proto") or req.url.scheme
     host = req.headers.get("x-forwarded-host") or req.headers.get("host") or req.url.netloc
     origin = f"{proto}://{host}".rstrip("/")
@@ -282,13 +298,11 @@ async def join_room(code: str, data: JoinRoom):
         raise HTTPException(409, "ゲームはすでに始まっています")
     if len(room.players) >= MAX_PLAYERS:
         raise HTTPException(409, "この部屋は満員です")
+
     name = clean_name(data.name)
-    dino = clean_dino(data.dino)
     pid = secrets.token_hex(8)
     token = secrets.token_urlsafe(22)
-    player = Player(pid, token, name, dino, DINO_COLORS[dino])
-    room.players[pid] = player
-    room.totals[pid] = 0.0
+    room.players[pid] = Player(pid, token, name)
     room.last_active = time.time()
     await broadcast(code)
     return {"player_id": pid, "player_token": token}
@@ -303,8 +317,6 @@ async def start_game(code: str, request: Request):
         raise HTTPException(403, "ホストだけが開始できます")
     if room.stage != "lobby":
         raise HTTPException(409, "開始できません")
-    if len(room.players) < 2:
-        raise HTTPException(409, "2人以上で開始してね")
     begin_game(room)
     room.last_active = time.time()
     await broadcast(code)
@@ -319,8 +331,8 @@ async def next_round(code: str, request: Request):
     if request.headers.get("x-host-token", "") != room.host_token:
         raise HTTPException(403, "ホストだけが進められます")
     if room.stage != "round_result":
-        raise HTTPException(409, "次のレースには進めません")
-    start_round(room)
+        raise HTTPException(409, "まだ決勝には進めません")
+    begin_final(room)
     room.last_active = time.time()
     await broadcast(code)
     return {"ok": True}
@@ -368,19 +380,23 @@ async def ws_room(ws: WebSocket, code: str, player: str, token: str, host: str =
             if not p:
                 continue
 
-            if msg.get("type") == "run" and room.stage == "playing":
-                if not p.alive:
+            if msg.get("type") == "score" and room.stage == "playing":
+                active_ids = {pid for m in room.matches for pid in m.players}
+                if player not in active_ids:
                     continue
                 try:
-                    dist = float(msg.get("distance", 0.0))
-                    y = float(msg.get("y", 0.0))
+                    sc = int(msg.get("score", 0))
+                    hits = int(msg.get("hits", 0))
+                    misses = int(msg.get("misses", 0))
+                    combo = int(msg.get("best_combo", 0))
                 except Exception:
                     continue
-                if dist >= p.distance - 3:
-                    p.distance = max(0.0, min(dist, p.distance + 35.0))
-                p.y = max(-500.0, min(1000.0, y))
-                if msg.get("alive") is False:
-                    p.alive = False
+                room.scores[player] = Score(
+                    score=max(-99, min(999, sc)),
+                    hits=max(0, min(999, hits)),
+                    misses=max(0, min(999, misses)),
+                    best_combo=max(0, min(999, combo)),
+                )
                 await broadcast(code)
     except WebSocketDisconnect:
         pass
@@ -390,6 +406,4 @@ async def ws_room(ws: WebSocket, code: str, player: str, token: str, host: str =
         room = rooms.get(code)
         if room and player in room.players:
             room.players[player].connected = False
-            if room.stage == "playing":
-                room.players[player].alive = False
             await broadcast(code)

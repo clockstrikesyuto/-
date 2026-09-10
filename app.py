@@ -13,7 +13,134 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 ROOT = Path(__file__).resolve().parent
-HTML = (ROOT / "index.html").read_text(encoding="utf-8")
+BASE_HTML = (ROOT / "index.html").read_text(encoding="utf-8")
+
+PATCH_CSS = r"""
+/* v0.2 gameplay control patch */
+#gameScreen,
+#gameScreen * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+#gameCanvas {
+  pointer-events: none;
+}
+.game-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px 10px calc(10px + env(safe-area-inset-bottom));
+}
+#jumpBtn {
+  width: min(460px, 92vw);
+  min-height: 72px;
+  border-radius: 22px;
+  font-size: clamp(22px, 5vw, 34px);
+  letter-spacing: .05em;
+  background: linear-gradient(180deg, #92f7ae, #54da8d);
+  color: #082216;
+  box-shadow: 0 10px 28px rgba(83,216,141,.28), inset 0 -4px 0 rgba(0,0,0,.14);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+#jumpBtn:active {
+  transform: translateY(2px) scale(.985);
+  box-shadow: 0 5px 16px rgba(83,216,141,.22), inset 0 -2px 0 rgba(0,0,0,.14);
+}
+@media (max-width:700px) {
+  .game-controls { padding-top: 12px; }
+  #jumpBtn { min-height: 76px; }
+}
+"""
+
+PATCH_SCRIPT = r"""
+<script>
+(() => {
+  // Prevent long-press selection/callouts only while interacting with the game area.
+  const gameScreen = document.getElementById('gameScreen');
+  if (!gameScreen) return;
+  gameScreen.addEventListener('contextmenu', e => e.preventDefault());
+  gameScreen.addEventListener('dragstart', e => e.preventDefault());
+  gameScreen.addEventListener('selectstart', e => e.preventDefault());
+
+  // Put a large jump button in the free space below the play field.
+  if (!document.getElementById('jumpBtn')) {
+    const controls = document.createElement('div');
+    controls.className = 'game-controls';
+    controls.innerHTML = '<button id="jumpBtn" type="button" aria-label="ジャンプ">JUMP！</button>';
+    gameScreen.appendChild(controls);
+
+    const jumpBtn = document.getElementById('jumpBtn');
+    const pressJump = e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (game.mode === 'solo' && !game.alive) {
+        document.querySelector('#outOverlay b').textContent = 'OUT!';
+        document.getElementById('tapHint').textContent = 'SPACE / 下のJUMPボタン';
+        resetRun();
+        game.running = true;
+        return;
+      }
+      jump();
+    };
+    jumpBtn.addEventListener('pointerdown', pressJump, {passive:false});
+  }
+
+  // Canvas is display-only now; keyboard or the button below controls jumping.
+  const hint = document.getElementById('tapHint');
+  if (hint) hint.textContent = 'SPACE / 下のJUMPボタン';
+
+  // The original handler restarted the round whenever game.running was false.
+  // During countdown and after falling into a pit that flag is intentionally false,
+  // so it caused endless resets. Initialize only once per (round, seed).
+  handleState = function(s) {
+    net.state = s;
+    if (s.stage === 'lobby') {
+      game._multiRoundKey = '';
+      renderLobby(s);
+      show('lobbyScreen');
+      return;
+    }
+
+    if (s.stage === 'countdown' || s.stage === 'playing') {
+      const roundKey = `${s.round_no}:${s.seed}`;
+      if (game.mode !== 'multi' || game._multiRoundKey !== roundKey) {
+        game._multiRoundKey = roundKey;
+        startMultiRound(s);
+        const h = document.getElementById('tapHint');
+        if (h) h.textContent = 'SPACE / 下のJUMPボタン';
+      }
+
+      if (s.stage === 'countdown') {
+        const cd = document.getElementById('countdown');
+        cd.classList.remove('hidden');
+        // Server countdown starts at 3.2s; never display a confusing "4".
+        cd.textContent = Math.max(1, Math.min(3, Math.ceil(s.countdown)));
+        game.running = false;
+      } else {
+        document.getElementById('countdown').classList.add('hidden');
+        game.running = game.alive;
+      }
+
+      updateRemote(s);
+      renderRanks(s);
+      show('gameScreen');
+      return;
+    }
+
+    if (s.stage === 'round_result' || s.stage === 'final_result') {
+      game.running = false;
+      renderResult(s);
+      show('resultScreen');
+    }
+  };
+})();
+</script>
+"""
+
+HTML = BASE_HTML.replace("</style>", PATCH_CSS + "\n</style>", 1)
+HTML = HTML.replace("</body>", PATCH_SCRIPT + "\n</body>", 1)
 app = FastAPI(title="DINO DASH RACE")
 
 MAX_PLAYERS = 4

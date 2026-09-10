@@ -1,0 +1,116 @@
+/* DINO DASH visual + spectator upgrade */
+#gameScreen,
+#gameScreen * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+#gameCanvas {
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+.game-shell {
+  background:#79c9e6;
+  border:4px solid #172536;
+  box-shadow:0 10px 0 #07101a,0 28px 70px rgba(0,0,0,.45);
+}
+.game-controls {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:14px 10px calc(12px + env(safe-area-inset-bottom));
+  min-height:96px;
+}
+#jumpBtn {
+  width:min(470px,92vw);
+  min-height:72px;
+  border-radius:18px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:clamp(24px,5vw,36px);
+  letter-spacing:.08em;
+  background:linear-gradient(180deg,#86f1a6,#49c97b);
+  color:#071b10;
+  border:3px solid #153b27;
+  box-shadow:0 7px 0 #236b44,0 15px 28px rgba(0,0,0,.25);
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+#jumpBtn:active { transform:translateY(5px); box-shadow:0 2px 0 #236b44,0 8px 16px rgba(0,0,0,.22); }
+#jumpBtn:disabled { opacity:.36; filter:grayscale(.4); transform:none; }
+.spectator-controls {
+  width:min(620px,95vw);
+  display:grid;
+  grid-template-columns:78px 1fr 78px;
+  gap:10px;
+  align-items:center;
+}
+.spectator-controls button {
+  min-height:64px;
+  border-radius:16px;
+  background:#223654;
+  color:#fff;
+  border:2px solid rgba(255,255,255,.15);
+  font-size:26px;
+  touch-action:manipulation;
+}
+.spectator-label {
+  min-height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  border-radius:16px;
+  background:#101c2e;
+  border:2px solid rgba(255,255,255,.12);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-weight:900;
+  text-align:center;
+  padding:8px 10px;
+}
+.spectator-label small { color:#9eb1c9; font-size:10px; margin-top:3px; }
+.spectator-banner {
+  position:absolute;
+  left:50%;
+  top:74px;
+  transform:translateX(-50%);
+  z-index:5;
+  padding:8px 14px;
+  border-radius:9px;
+  background:rgba(7,15,25,.88);
+  border:2px solid rgba(255,255,255,.2);
+  color:#fff;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12px;
+  font-weight:900;
+  text-align:center;
+  pointer-events:none;
+  white-space:nowrap;
+}
+.out-overlay { background:rgba(6,11,18,.34); }
+.out-overlay b,
+.out-overlay span,
+.countdown,
+.rank-pill,
+.hud-card,
+.tap-hint {
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+.pixel-dino-card {
+  width:84px;
+  height:54px;
+  image-rendering:pixelated;
+}
+.dino-species {
+  margin-top:3px;
+  font-size:9px;
+  color:#8fa9c0;
+  font-weight:1000;
+  letter-spacing:.05em;
+}
+@media(max-width:700px){
+  .game-controls{min-height:100px;padding-top:12px}
+  #jumpBtn{min-height:76px}
+  .spectator-controls{grid-template-columns:64px 1fr 64px}
+  .spectator-controls button,.spectator-label{min-height:68px}
+  .spectator-banner{top:68px;font-size:10px;max-width:88vw;overflow:hidden;text-overflow:ellipsis}
+}

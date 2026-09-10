@@ -61,10 +61,12 @@ clients: Dict[str, list[dict]] = {}
 class CreateRoom(BaseModel):
     name: str
     rounds: int = 3
+    dino: int = 0
 
 
 class JoinRoom(BaseModel):
     name: str
+    dino: int = 0
 
 
 def clean_name(name: str) -> str:
@@ -72,6 +74,14 @@ def clean_name(name: str) -> str:
     if not name:
         raise HTTPException(400, "名前を入力してね")
     return name[:14]
+
+
+def clean_dino(value: int) -> int:
+    try:
+        value = int(value)
+    except Exception:
+        return 0
+    return value if 0 <= value < MAX_PLAYERS else 0
 
 
 def new_code() -> str:
@@ -240,11 +250,12 @@ async def page(code: Optional[str] = None):
 async def create_room(data: CreateRoom, req: Request):
     name = clean_name(data.name)
     rounds = data.rounds if data.rounds in (1, 2, 3, 4, 5) else 3
+    dino = clean_dino(data.dino)
     code = new_code()
     pid = secrets.token_hex(8)
     token = secrets.token_urlsafe(22)
     host_token = secrets.token_urlsafe(24)
-    player = Player(pid, token, name, 0, DINO_COLORS[0])
+    player = Player(pid, token, name, dino, DINO_COLORS[dino])
     room = Room(code, host_token, pid, rounds, {pid: player})
     room.totals[pid] = 0.0
     rooms[code] = room
@@ -272,10 +283,9 @@ async def join_room(code: str, data: JoinRoom):
     if len(room.players) >= MAX_PLAYERS:
         raise HTTPException(409, "この部屋は満員です")
     name = clean_name(data.name)
+    dino = clean_dino(data.dino)
     pid = secrets.token_hex(8)
     token = secrets.token_urlsafe(22)
-    used = {p.dino for p in room.players.values()}
-    dino = next((i for i in range(MAX_PLAYERS) if i not in used), len(room.players) % MAX_PLAYERS)
     player = Player(pid, token, name, dino, DINO_COLORS[dino])
     room.players[pid] = player
     room.totals[pid] = 0.0
@@ -359,8 +369,6 @@ async def ws_room(ws: WebSocket, code: str, player: str, token: str, host: str =
                 continue
 
             if msg.get("type") == "run" and room.stage == "playing":
-                # Once OUT, the server freezes this player's record. Any later
-                # jump/run packets are ignored; the client is spectator-only.
                 if not p.alive:
                     continue
                 try:

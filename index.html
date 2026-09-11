@@ -3,51 +3,87 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-<meta name="theme-color" content="#111318" />
+<meta name="theme-color" content="#08090d" />
 <title>BEAT RITUAL — tactile rhythm game</title>
 <link rel="stylesheet" href="beat.css" />
 </head>
 <body>
 <div id="app">
   <section id="home" class="screen active">
-    <div class="brand">
-      <div><small>TACTILE RHYTHM</small><h1>BEAT<br>RITUAL</h1></div>
-      <div class="badge">🎧 音あり推奨</div>
-    </div>
-    <p class="intro">日常の「気持ちいい音」を、指先で鳴らす。右から流れてくるリングが白いラインに重なった瞬間、画面をタップ。ステージごとに道具も音も景色も変わります。</p>
-    <div class="stage-grid" id="stageGrid"></div>
-    <div class="actions">
-      <button class="primary" id="allBtn">▶ ALL STAGES</button>
-      <button class="ghost" id="howBtn">遊び方</button>
-    </div>
-  </section>
-  <section id="game" class="screen">
-    <div class="game-bg" id="gameBg"></div><div class="grain"></div><div class="fever" id="fever"></div>
-    <canvas id="canvas"></canvas>
-    <div class="hud">
-      <div class="hud-left"><button class="back" id="backBtn">×</button><div class="stage-title"><b id="hudTitle">LIGHTER</b><span id="hudSub">CLICK / IGNITE</span></div></div>
-      <div class="combo"><strong id="combo">0</strong><span>COMBO</span></div>
-      <div class="score"><strong id="score">000000</strong><span>SCORE</span></div>
-    </div>
-    <div class="progress"><i id="progressBar"></i></div>
-    <div class="judgement" id="judgement">PERFECT</div>
-    <div class="item-wrap"><div class="item" id="item">🔥</div></div>
-    <div class="instruction" id="instruction">TAP / SPACE — ラインに重なった瞬間</div>
-    <div id="countdown"></div>
-  </section>
-  <section id="results" class="screen">
-    <div class="result-card">
-      <div class="result-top"><div class="rank" id="rank">S</div><div class="result-score"><strong id="finalScore">124,500</strong><span>FINAL SCORE</span></div></div>
-      <div class="best" id="bestText"></div><div class="unlock" id="unlockText"></div>
-      <div class="stats">
-        <div class="stat"><b id="stPerfect">0</b><span>PERFECT</span></div>
-        <div class="stat"><b id="stGreat">0</b><span>GREAT</span></div>
-        <div class="stat"><b id="stGood">0</b><span>GOOD</span></div>
-        <div class="stat"><b id="stMiss">0</b><span>MISS</span></div>
+    <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+    <header class="brand">
+      <div>
+        <small>TACTILE RHYTHM / OBJECTS BECOME INSTRUMENTS</small>
+        <h1>BEAT<br><i>RITUAL</i></h1>
+        <p>日常の「触りたくなる音」を、ひとつずつステージに。</p>
       </div>
-      <div class="result-actions"><button class="primary" id="retryBtn">↻ RETRY</button><button class="ghost" id="nextBtn">NEXT STAGE →</button><button class="ghost" id="homeBtn">STAGE SELECT</button></div>
+      <div class="sound-pill">◉ SOUND ON 推奨</div>
+    </header>
+    <div class="stage-grid" id="stageGrid"></div>
+    <div class="home-actions">
+      <button class="primary" id="allBtn"><span>▶</span> ALL STAGES</button>
+      <button class="ghost" id="howBtn">HOW TO PLAY</button>
+    </div>
+    <div class="home-foot">TAP / HOLD / SWIPE — STAGEごとに「使い方」が変わります。</div>
+  </section>
+
+  <section id="game" class="screen">
+    <canvas id="world"></canvas>
+    <div class="vignette"></div><div class="grain"></div>
+    <div class="camera-flash" id="flash"></div>
+    <div class="heat-wash" id="heatWash"></div>
+    <div class="hud">
+      <div class="hud-left">
+        <button class="back" id="backBtn" aria-label="戻る">×</button>
+        <div class="stage-name"><small id="hudNo">STAGE 01</small><b id="hudTitle">LIGHTER</b><span id="hudSub">BURN THE FLASH</span></div>
+      </div>
+      <div class="combo-wrap"><span>COMBO</span><strong id="combo">0</strong></div>
+      <div class="score-wrap"><strong id="score">000000</strong><span>SCORE</span></div>
+    </div>
+    <div class="progress"><i id="progressBar"></i><em id="progressDot"></em></div>
+    <div class="judge" id="judgement">PERFECT</div>
+    <div class="gesture" id="gesture"><b>TAP</b><span>光った写真を燃やす</span></div>
+    <div class="story" id="story">some things are better left as ash.</div>
+    <div id="countdown"></div>
+    <button id="inputSurface" aria-label="ゲーム操作エリア"></button>
+  </section>
+
+  <section id="results" class="screen">
+    <div class="result-glow"></div>
+    <div class="result-card">
+      <div class="result-kicker" id="resultStage">STAGE 01 / LIGHTER</div>
+      <div class="result-head">
+        <div class="rank" id="rank">S</div>
+        <div class="result-score"><strong id="finalScore">0</strong><span>FINAL SCORE</span></div>
+      </div>
+      <div class="best" id="bestText"></div>
+      <div class="stats">
+        <div><b id="stPerfect">0</b><span>PERFECT</span></div>
+        <div><b id="stGreat">0</b><span>GREAT</span></div>
+        <div><b id="stGood">0</b><span>GOOD</span></div>
+        <div><b id="stMiss">0</b><span>MISS</span></div>
+      </div>
+      <div class="result-actions">
+        <button class="primary" id="retryBtn">↻ RETRY</button>
+        <button class="ghost" id="nextBtn">NEXT STAGE →</button>
+        <button class="ghost" id="homeBtn">STAGE SELECT</button>
+      </div>
     </div>
   </section>
+
+  <dialog id="howDialog">
+    <button class="dialog-close" id="howClose">×</button>
+    <small>HOW TO PLAY</small>
+    <h2>ノーツを叩くんじゃない。<br>道具を“使う”。</h2>
+    <p>タイミングの目印が操作ポイントに重なった瞬間、そのステージのジェスチャーを入力。PERFECTをつなぐほど画面の光・音・粒子が濃くなります。</p>
+    <div class="how-grid">
+      <div><b>LIGHTER</b><span>タップ / 長押し</span></div>
+      <div><b>MATCH</b><span>横スワイプ</span></div>
+      <div><b>CAMERA</b><span>タップ</span></div>
+      <div><b>SODA</b><span>上フリック</span></div>
+      <div><b>TYPEWRITER</b><span>タップ</span></div>
+    </div>
+  </dialog>
 </div>
 <script src="beat.js"></script>
 </body>

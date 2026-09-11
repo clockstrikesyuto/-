@@ -13,7 +13,11 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 ROOT = Path(__file__).resolve().parent
-HTML = (ROOT / "index.html").read_text(encoding="utf-8")
+BASE_HTML = (ROOT / "index.html").read_text(encoding="utf-8")
+HOTFIX_CSS = (ROOT / "poko_hotfix.css").read_text(encoding="utf-8")
+HOTFIX_JS = (ROOT / "poko_hotfix.js").read_text(encoding="utf-8")
+HTML = BASE_HTML.replace("</style>", HOTFIX_CSS + "\n</style>", 1)
+HTML = HTML.replace("</head>", f"<script>\n{HOTFIX_JS}\n</script>\n</head>", 1)
 
 app = FastAPI(title="POKO SMASH")
 

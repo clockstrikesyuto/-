@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: dino-dash-race
+    name: route-rush
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt

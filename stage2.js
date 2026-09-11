@@ -5,20 +5,20 @@
 
   const STAGES2=[
     {name:'はじまりの草原',emoji:'🌿',from:0,sub:'RUN INTO THE WILD'},
-    {name:'原始ジャングル',emoji:'🌴',from:400,sub:'PRIMAL JUNGLE'},
-    {name:'化石洞窟',emoji:'💀',from:800,sub:'FOSSIL CAVE'},
-    {name:'氷河地帯',emoji:'❄️',from:1200,sub:'ICE AGE'},
-    {name:'火山地帯',emoji:'🌋',from:1600,sub:'VOLCANIC ZONE'},
-    {name:'隕石終末地帯',emoji:'☄️',from:2100,sub:'EXTINCTION RUN'},
-    {name:'UNKNOWN',emoji:'🌀',from:2600,sub:'??? BEYOND TIME ???'}
+    {name:'原始ジャングル',emoji:'🌴',from:500,sub:'PRIMAL JUNGLE'},
+    {name:'化石洞窟',emoji:'💀',from:1000,sub:'FOSSIL CAVE'},
+    {name:'氷河地帯',emoji:'❄️',from:1500,sub:'ICE AGE'},
+    {name:'火山地帯',emoji:'🌋',from:2200,sub:'VOLCANIC ZONE'},
+    {name:'隕石終末地帯',emoji:'☄️',from:3000,sub:'EXTINCTION RUN'},
+    {name:'UNKNOWN',emoji:'🌀',from:4000,sub:'??? BEYOND TIME ???'}
   ];
   const EVENTS=[
-    {m:650,text:'🦕 ドン… ドン… 巨大な足音が近づいてくる…'},
-    {m:1020,text:'⚠️ 落盤注意！ 洞窟が揺れている！',shake:true},
-    {m:1450,text:'❄️ 氷がきしむ音がする…'},
-    {m:1900,text:'🌋 大噴火！！ 地面が震える！',shake:true},
-    {m:2380,text:'☄️ 巨大隕石 接近中！！',shake:true},
-    {m:2860,text:'🌀 ここは……どこだ？',shake:true}
+    {m:750,text:'🦕 ドン… ドン… 巨大な足音が近づいてくる…'},
+    {m:1220,text:'⚠️ 落盤注意！ 洞窟が揺れている！',shake:true},
+    {m:1800,text:'❄️ 氷がきしむ音がする…'},
+    {m:2550,text:'🌋 大噴火！！ 地面が震える！',shake:true},
+    {m:3450,text:'☄️ 巨大隕石 接近中！！',shake:true},
+    {m:4350,text:'🌀 ここは……どこだ？',shake:true}
   ];
   const ICONS=STAGES2.map(s=>s.emoji);
 
@@ -39,12 +39,20 @@
   setInterval(()=>{
     if(gameScreen.classList.contains('hidden'))return;
     const d=watchedDistance();
-    if(d+80<lastDistance){lastStage=-1;seen=new Set()}
+    if(d+80<lastDistance){
+      // Retry / next round: do not replay the current stage title again.
+      lastStage=stageFor(d).idx;
+      seen=new Set();
+    }
     const st=stageFor(d);
     badge.textContent=`STAGE ${st.idx+1}  ${st.emoji} ${st.name}`;
     renderProgress(st.idx);
     const ns=STAGES2[st.idx+1];next.textContent=ns?`NEXT ${ns.emoji}  あと ${Math.max(0,Math.ceil(ns.from-d))}m`:'MAX ZONE  ∞';
-    if(st.idx!==lastStage){showIntro(st);lastStage=st.idx}
+    if(st.idx!==lastStage){
+      // Stage intros are for first arrival while actively playing, never while OUT/spectating.
+      if(!game._spectating&&game.alive!==false)showIntro(st);
+      lastStage=st.idx;
+    }
     for(const e of EVENTS){if(d>=e.m&&lastDistance<e.m&&!seen.has(e.m)){seen.add(e.m);showEvent(e)}}
     lastDistance=d;
   },120);
@@ -53,28 +61,31 @@
   segmentObjects=function(seg){
     if(seg<1)return[];
     const base=seg*620,m=base/PX_PER_M,st=stageFor(m),r=randSeg(seg),out=[];
-    const x1=base+220+randSeg(seg,2)*115;
-    const x2=base+390+randSeg(seg,7)*45;
-    const rock=()=>({type:'rock',x:x1,w:44+randSeg(seg,5)*28,h:40+randSeg(seg,6)*42});
-    const pit=()=>({type:'pit',x:x1,w:100+randSeg(seg,3)*62});
-    const log=()=>({type:'log',x:x1,w:72+randSeg(seg,5)*34,h:30+randSeg(seg,6)*20});
-    const bone=()=>({type:'bone',x:x1,w:54+randSeg(seg,5)*24,h:36+randSeg(seg,6)*22});
-    const lava=()=>({type:'lava',x:x1,w:68+randSeg(seg,5)*42,h:30+randSeg(seg,6)*24});
+    const x1=base+170+randSeg(seg,2)*55;
+    const x2=base+455+randSeg(seg,7)*45;
+    const rock=(x=x1)=>({type:'rock',x,w:44+randSeg(seg,5)*28,h:40+randSeg(seg,6)*42});
+    const pit=(x=x1)=>({type:'pit',x,w:100+randSeg(seg,3)*62});
+    const log=(x=x1)=>({type:'log',x,w:72+randSeg(seg,5)*34,h:30+randSeg(seg,6)*20});
+    const bone=(x=x1)=>({type:'bone',x,w:54+randSeg(seg,5)*24,h:36+randSeg(seg,6)*22});
+    const lava=(x=x1)=>({type:'lava',x,w:68+randSeg(seg,5)*42,h:30+randSeg(seg,6)*24});
     const meteor=(x=x1)=>({type:'meteor',x,w:46+randSeg(seg,5)*26,h:48+randSeg(seg,6)*30});
     if(st.idx===0){
       if(r<.18)out.push(pit());else if(r<.70)out.push(rock());else out.push(bone());
+      // Grassland should already feel like a game: usually a second, separately timed jump.
+      if(randSeg(seg,11)>.30){const r2=randSeg(seg,12);if(r2<.18)out.push(pit(x2));else if(r2<.72)out.push(rock(x2));else out.push(bone(x2))}
     }else if(st.idx===1){
-      if(r<.12)out.push(pit());else if(r<.62)out.push(log());else if(r<.85)out.push(rock());else{out.push(log());out.push({...rock(),x:x2,w:40,h:44})}
+      if(r<.12)out.push(pit());else if(r<.62)out.push(log());else if(r<.85)out.push(rock());else{out.push(log());out.push({...rock(x2),w:40,h:44})}
+      if(randSeg(seg,13)>.62)out.push(randSeg(seg,14)<.55?log(x2):rock(x2));
     }else if(st.idx===2){
-      if(r<.22)out.push(pit());else if(r<.56)out.push(rock());else if(r<.80)out.push(bone());else{out.push({...rock(),x:x1,w:42,h:58});out.push({type:'rock',x:x2,w:46,h:68})}
+      if(r<.22)out.push(pit());else if(r<.56)out.push(rock());else if(r<.80)out.push(bone());else{out.push({...rock(),w:42,h:58});out.push({...rock(x2),w:46,h:68})}
     }else if(st.idx===3){
       if(r<.32)out.push(pit());else if(r<.70)out.push({...rock(),h:48+randSeg(seg,6)*35});else out.push(bone());
     }else if(st.idx===4){
-      if(r<.20)out.push(pit());else if(r<.63)out.push(lava());else if(r<.84)out.push(rock());else{out.push(lava());out.push({...rock(),x:x2,w:42,h:54})}
+      if(r<.20)out.push(pit());else if(r<.63)out.push(lava());else if(r<.84)out.push(rock());else{out.push(lava());out.push({...rock(x2),w:42,h:54})}
     }else if(st.idx===5){
       if(r<.24)out.push(pit());else if(r<.72)out.push(meteor());else{out.push(meteor(x1));out.push({...meteor(x2),w:42,h:56})}
     }else{
-      if(r<.18)out.push(pit());else if(r<.40)out.push(meteor());else if(r<.60)out.push(lava());else if(r<.80)out.push(bone());else{out.push({...meteor(x1),w:40,h:54});out.push({type:'bone',x:x2,w:54,h:45})}
+      if(r<.18)out.push(pit());else if(r<.40)out.push(meteor());else if(r<.60)out.push(lava());else if(r<.80)out.push(bone());else{out.push({...meteor(x1),w:40,h:54});out.push({...bone(x2),w:54,h:45})}
     }
     return out;
   };

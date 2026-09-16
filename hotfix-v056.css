@@ -48,6 +48,20 @@ html,body{
   padding-bottom:calc(170px + env(safe-area-inset-bottom))!important;
   scroll-padding-bottom:calc(170px + env(safe-area-inset-bottom))!important;
 }
+/* Route header must participate in normal layout; sticky caused it to cover the map on iPhone. */
+.route-screen .map-sky{
+  position:relative!important;
+  top:auto!important;
+  left:auto!important;
+  right:auto!important;
+  z-index:3!important;
+  margin:0 0 12px!important;
+  transform:none!important;
+}
+.route-screen .route-board{
+  position:relative!important;
+  z-index:1!important;
+}
 .route-row.current{
   scroll-margin-top:110px!important;
   scroll-margin-bottom:calc(150px + env(safe-area-inset-bottom))!important;

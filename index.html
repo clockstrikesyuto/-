@@ -14,18 +14,29 @@
     <div class="bg-grid"></div>
     <div class="bg-orb orb-a"></div><div class="bg-orb orb-b"></div>
     <div id="fxLayer" class="fx-layer"></div>
+
     <header id="hud" class="hud hidden">
-      <div class="hud-left">
+      <div class="hud-mainrow">
         <button class="icon-btn" id="homeBtn" aria-label="ホーム">⌂</button>
-        <div class="run-label"><b id="actLabel">ACT 1</b><span id="floorLabel">FLOOR 1</span></div>
+        <div class="hud-character">
+          <div class="hud-character-name" id="hudCharName">BREAKER</div>
+          <div class="hud-character-sub"><span id="hudCharTitle">RUSH DIVER</span> • <b id="actLabel">ACT 1</b> <span id="floorLabel">FLOOR 1</span></div>
+        </div>
+        <div class="hud-stats">
+          <span>❤️ <b id="hudHp">80</b>/<span id="hudMaxHp">80</span></span>
+          <span>🪙 <b id="hudGold">80</b></span>
+        </div>
+        <button class="icon-btn" id="deckBtn" aria-label="デッキ">▤</button>
       </div>
-      <div class="hud-stats">
-        <span>❤️ <b id="hudHp">80</b>/<span id="hudMaxHp">80</span></span>
-        <span>🪙 <b id="hudGold">80</b></span>
+      <div class="hud-shelves">
+        <div id="hudRelics" class="hud-shelf relic-shelf" aria-label="レリック"></div>
+        <div id="hudPotions" class="hud-shelf potion-shelf" aria-label="ポーション"></div>
+        <div id="hudEffects" class="hud-shelf effect-shelf" aria-label="特殊効果"></div>
       </div>
-      <button class="icon-btn" id="deckBtn" aria-label="デッキ">▤</button>
     </header>
+
     <main id="screen" class="screen"></main>
+
     <div id="modal" class="modal hidden">
       <div class="modal-backdrop" data-close-modal></div>
       <div class="modal-card">
@@ -33,6 +44,7 @@
         <div id="modalContent"></div>
       </div>
     </div>
+
     <div id="toast" class="toast"></div>
   </div>
   <script src="loader.js"></script>

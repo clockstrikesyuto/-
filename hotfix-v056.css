@@ -1,6 +1,76 @@
-*{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;-webkit-tap-highlight-color:transparent!important}
-html,body,#app{height:var(--vvh,100dvh)!important;min-height:var(--vvh,100dvh)!important;max-height:var(--vvh,100dvh)!important;overflow:hidden!important;overscroll-behavior:none!important}
-.screen{height:var(--vvh,100dvh)!important;max-height:var(--vvh,100dvh)!important;overflow-x:hidden!important;overflow-y:auto!important;padding-bottom:calc(96px + env(safe-area-inset-bottom))!important;overscroll-behavior-y:contain!important;-webkit-overflow-scrolling:touch!important}
-.route-screen{padding-bottom:calc(124px + env(safe-area-inset-bottom))!important;scroll-padding-bottom:calc(124px + env(safe-area-inset-bottom))!important}
-button,.card,.route-node,.character-card,.shelf-icon,img,svg{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;-webkit-user-drag:none!important}
-.route-row.current{scroll-margin-bottom:calc(110px + env(safe-area-inset-bottom));scroll-margin-top:145px}
+/* iPhone/Safari global viewport + interaction hotfix */
+*{
+  -webkit-user-select:none!important;
+  user-select:none!important;
+  -webkit-touch-callout:none!important;
+  -webkit-tap-highlight-color:transparent!important;
+  box-sizing:border-box;
+}
+html,body{
+  width:100%!important;
+  height:var(--vvh,100dvh)!important;
+  min-height:var(--vvh,100dvh)!important;
+  max-height:var(--vvh,100dvh)!important;
+  margin:0!important;
+  overflow:hidden!important;
+  overscroll-behavior:none!important;
+}
+#app{
+  width:100%!important;
+  height:var(--vvh,100dvh)!important;
+  min-height:var(--vvh,100dvh)!important;
+  max-height:var(--vvh,100dvh)!important;
+  overflow:hidden!important;
+}
+.hud{
+  position:relative!important;
+  z-index:50!important;
+}
+.screen{
+  height:calc(var(--vvh,100dvh) - var(--hudh,0px))!important;
+  min-height:0!important;
+  max-height:calc(var(--vvh,100dvh) - var(--hudh,0px))!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior-y:contain!important;
+  scroll-behavior:auto!important;
+  scroll-padding-top:18px!important;
+  scroll-padding-bottom:calc(150px + env(safe-area-inset-bottom))!important;
+  padding-bottom:calc(150px + env(safe-area-inset-bottom))!important;
+}
+/* Make the last content block fully reachable above Safari's bottom UI. */
+.screen> :last-child{
+  margin-bottom:max(28px,env(safe-area-inset-bottom))!important;
+}
+.route-screen{
+  min-height:max-content!important;
+  padding-bottom:calc(170px + env(safe-area-inset-bottom))!important;
+  scroll-padding-bottom:calc(170px + env(safe-area-inset-bottom))!important;
+}
+.route-row.current{
+  scroll-margin-top:110px!important;
+  scroll-margin-bottom:calc(150px + env(safe-area-inset-bottom))!important;
+}
+/* Results/event/shop screens are content-first: never clip their final panel. */
+.result-screen,.results-screen,.run-result,.event-screen,.shop-screen,.rest-screen,.reward-screen{
+  min-height:max-content!important;
+  padding-bottom:calc(170px + env(safe-area-inset-bottom))!important;
+}
+button,.card,.route-node,.character-card,.shelf-icon,img,svg,[role="button"]{
+  -webkit-user-select:none!important;
+  user-select:none!important;
+  -webkit-touch-callout:none!important;
+  -webkit-user-drag:none!important;
+  touch-action:manipulation!important;
+}
+input,textarea,[contenteditable="true"]{
+  -webkit-user-select:text!important;
+  user-select:text!important;
+  -webkit-touch-callout:default!important;
+}
+/* Compact vertical rhythm on short iPhones without shrinking text too far. */
+@media (max-width:700px) and (max-height:760px){
+  .screen{padding-bottom:calc(128px + env(safe-area-inset-bottom))!important;scroll-padding-bottom:calc(128px + env(safe-area-inset-bottom))!important}
+  .route-screen{padding-bottom:calc(145px + env(safe-area-inset-bottom))!important}
+}

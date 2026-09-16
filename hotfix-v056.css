@@ -1,0 +1,6 @@
+*{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;-webkit-tap-highlight-color:transparent!important}
+html,body,#app{height:var(--vvh,100dvh)!important;min-height:var(--vvh,100dvh)!important;max-height:var(--vvh,100dvh)!important;overflow:hidden!important;overscroll-behavior:none!important}
+.screen{height:var(--vvh,100dvh)!important;max-height:var(--vvh,100dvh)!important;overflow-x:hidden!important;overflow-y:auto!important;padding-bottom:calc(96px + env(safe-area-inset-bottom))!important;overscroll-behavior-y:contain!important;-webkit-overflow-scrolling:touch!important}
+.route-screen{padding-bottom:calc(124px + env(safe-area-inset-bottom))!important;scroll-padding-bottom:calc(124px + env(safe-area-inset-bottom))!important}
+button,.card,.route-node,.character-card,.shelf-icon,img,svg{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;-webkit-user-drag:none!important}
+.route-row.current{scroll-margin-bottom:calc(110px + env(safe-area-inset-bottom));scroll-margin-top:145px}
